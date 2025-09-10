@@ -1,42 +1,57 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PBO Tools Hub</title>
-  <style>
-    body {
-      font-family: Inter, system-ui, sans-serif;
-      background: #f8fafc;
-      color: #0b1720;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
-    }
-    h1 { margin-bottom: 30px; }
-    .btn {
-      display: block;
-      margin: 10px 0;
-      padding: 14px 22px;
-      background: #0b74de;
-      color: white;
-      text-decoration: none;
-      border-radius: 8px;
-      font-size: 1.1rem;
-      transition: background 0.2s;
-    }
-    .btn:hover {
-      background: #095bb0;
-    }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CloudNine Project — PBO Tools Hub</title>
+<style>
+  body {
+    font-family: Inter, system-ui, Arial, sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #000; /* Schwarzer Hintergrund */
+    color: #fff; /* Weiße Schrift */
+    text-align: center;
+  }
+  img.logo {
+    max-width: 220px;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: 2rem;
+    margin: 0 0 8px 0;
+  }
+  h2 {
+    font-size: 1.3rem;
+    margin: 0 0 20px 0;
+    color: #bbb; /* leicht abgesetzte Farbe */
+  }
+  .btn {
+    display: block;
+    margin: 10px 0;
+    padding: 14px 22px;
+    background: #0b74de;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    transition: background 0.2s;
+    width: 220px;
+  }
+  .btn:hover {
+    background: #095bb0;
+  }
+</style>
 </head>
 <body>
-  <h1>PBO Tools Hub</h1>
-  <a href="tool1/index.html" class="btn">Open Tool 1 (Pokemon Helper)</a>
-  <a href="tool2/index.html" class="btn">Open Tool 2 (Quest & Items Helper)</a>
+  <img class="logo" src="https://i.imgur.com/32WkKU8.png" alt="CloudNine Logo"/>
+  <h1>CloudNine Project</h1>
+  <h2>PBO Tools Hub</h2>
+  <a class="btn" href="tool1/">Open Tool 1</a>
+  <a class="btn" href="tool2/">Open Tool 2</a>
 </body>
 </html>
