@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PBO Quest & Items Helper</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    :root{
+      --accent:#0b74de;
+      --highlight:#FFE8C6;
+      --bg:#ffffff;
+      --text:#0b1720;
+      --card-radius:10px;
+    }
+    body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;margin:0;background:var(--bg);color:var(--text)}
+    header{display:flex;justify-content:flex-end;padding:12px}
+    .container{max-width:1100px;margin:0 auto;padding:12px}
+    button{background:var(--accent);color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+    button.secondary{background:#eef3fb;color:var(--text)}
+    h1{margin:0 0 12px 0;font-size:1.25rem}
+    .loading-screen{height:100vh;display:flex;align-items:center;justify-content:center}
+    .loader-inner{text-align:center}
+    .loader-inner img{max-width:220px;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto}
+    .card{border-radius:var(--card-radius);padding:14px;margin:14px 0;box-shadow:0 6px 18px rgba(10,20,40,0.06);border:1px solid rgba(10,20,40,0.04);background:#fff}
+    .card.highlight{background:var(--highlight)}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:12px}
+    select,input[type="text"]{padding:8px;border-radius:8px;border:1px solid #e6eef9;width:100%;max-width:420px;background:white;color:#111}
+    /* ensure visible in light mode; dark-mode will override */
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:8px;border-bottom:1px solid #eef3fb;text-align:left;vertical-align:top}
+    pre.content{white-space:pre-wrap;font-family:inherit;margin:0}
+    .muted{color:#6b7280}
+    .hidden{display:none}
+
+    /* Dark mode */
+    .dark-mode{--bg:#0b0b0b;--text:#e6eef9;background:#0b0b0b;color:#e6eef9}
+    .dark-mode .card{box-shadow:none;border:1px solid rgba(255,255,255,0.04);background:#0f1113}
+    .dark-mode .card.highlight{background:#5a4636}
+    .dark-mode select,input[type="text"]{background:#111214;color:#e6eef9;border:1px solid rgba(255,255,255,0.06)}
+    .dark-mode th, .dark-mode td{border-bottom:1px solid rgba(255,255,255,0.06);color:var(--text)}
+    .dark-mode button{background:#1f2937;color:var(--text)}
+    .dark-mode button.secondary{background:#0b1220;color:var(--text);border:1px solid rgba(255,255,255,0.06)}
+  </style>
+</head>
+<body>
+  <header>
+    <button id="darkToggle" class="secondary">🌙 Dark Mode</button>
+  </header>
+
+  <main class="container">
+    <div id="loading" class="loading-screen">
+      <div class="loader-inner">
+        <img src="https://i.imgur.com/XZcfQzw.png" alt="Logo">
+        <div style="margin-top:8px">
+          <button id="loadBtn">Load Data</button>
+        </div>
+        <div id="loadStatus" class="muted" style="margin-top:10px"></div>
+      </div>
+    </div>
+
+    <div id="app" class="hidden">
+      <h1>PBO Quest & Items Helper</h1>
+
+      <!-- Quest Helper -->
+      <section id="questCard" class="card highlight">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="font-weight:600">Quest Helper</div>
+        </div>
+
+        <div class="row">
+          <select id="questRegion"><option value="">Select Region</option></select>
+          <select id="questQuest" disabled><option value="">Select Quest</option></select>
+          <button id="questShow">Show</button>
+        </div>
+        <div id="questOutput" style="margin-top:12px"></div>
+      </section>
+
+      <!-- Special Item Finder -->
+      <section id="itemCard" class="card">
+        <div style="font-weight:600">Special Item Finder</div>
+
+        <div style="margin-top:10px">Manual search (fuzzy)</div>
+        <div class="row">
+          <input id="itemManual" type="text" placeholder="e.g. Trick Room, TM070" />
+          <button id="itemManualBtn">Search</button>
+          <button id="itemManualReset" class="secondary">Reset</button>
+        </div>
+        <div id="itemManualOut" style="margin-top:8px"></div>
+
+        <div style="margin-top:12px">Filtered search</div>
+        <div class="row">
+          <select id="itemRegion"><option value="">Select Region</option></select>
+          <select id="itemLocation" disabled><option value="">Select Location</option></select>
+          <select id="itemName" disabled><option value="">Select Item</option></select>
+          <button id="itemFilterBtn">Search</button>
+          <button id="itemFilterReset" class="secondary">Reset</button>
+        </div>
+        <div id="itemFilterOut" style="margin-top:10px"></div>
+      </section>
+
+      <!-- EV Spot Finder -->
+      <section id="evCard" class="card highlight">
+        <div style="font-weight:600">EV Spot Finder</div>
+        <div class="row">
+          <select id="evRegion"><option value="">Select Region</option></select>
+          <select id="evSelect" disabled><option value="">Select EV</option></select>
+          <button id="evShow">Show</button>
+          <button id="evReset" class="secondary">Reset</button>
+        </div>
+        <div id="evOutput" style="margin-top:12px"></div>
+      </section>
+
+      <!-- Regi Trio Check -->
+      <section id="regiCard" class="card">
+        <div style="font-weight:600">Regi Trio Check</div>
+        <div class="row">
+          <select id="regiTime"><option value="">Select Time</option></select>
+          <button id="regiShow">Show</button>
+          <button id="regiReset" class="secondary">Reset</button>
+        </div>
+        <div id="regiOutput" style="margin-top:12px"></div>
+      </section>
+
+      <!-- Shoal Cave Check -->
+      <section id="shoalCard" class="card highlight">
+        <div style="font-weight:600">Shoal Cave Check</div>
+        <div class="row">
+          <button id="shoalBtn">Check Tide</button>
+        </div>
+        <div id="shoalOutput" style="margin-top:12px"></div>
+      </section>
+    </div>
+  </main>
+
+<script>
+/* Utility helpers */
+const $ = id => document.getElementById(id);
+const escapeHtml = s => s === undefined || s === null ? '' : String(s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const normalize = s => (s||'').toString().trim().toLowerCase();
+
+/* CSV URLs (from your sheets) */
+const QUEST_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSLUoaCoGaRwhc7rdFxpQuKmHSdYG5vlzYSjXYSAutTfowLYfmuuKxULAE-ePGl66uZpO7JKk97Yoo7/pub?output=csv';
+const ITEM_CSV  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVGd00wRMYJ_keK_ESGV_RUw6yUHUbsexmiXfm9pp8vw_oUGnvYmCKMCNaKwvTNVi8lXED_Qi11edq/pub?output=csv';
+const EV_CSV    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS3s-al3s9rwdhK0FHls7J368zMl0Hdryc_y6MVwwXaiWLpgzImXs_9YsC5lXkwRdi_aPMi_gRHfsei/pub?output=csv';
+const REGI_CSV  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSnZTHT3SeW7VWywFDBWhvjor0NqrwEcXPyBPOH53FD_Z5GHPNhO4NlGfpzniRjpuJBHna8vZJ1Ndia/pub?output=csv';
+
+/* Data holders */
+let questRows = [], questFields = [];
+let itemRows = [], itemFields = [];
+let evRows = [], evFields = [];
+let regiRows = [], regiFields = [];
+
+/* find best matching field key from headers */
+function findFieldKey(fields, candidates){
+  if(!fields || !fields.length) return null;
+  const normalized = fields.map(f => ({orig:f, norm:normalize(f)}));
+  for(const c of candidates){
+    const cNorm = c.toLowerCase();
+    // exact matches
+    const exact = normalized.find(x => x.norm === cNorm);
+    if(exact) return exact.orig;
+  }
+  for(const c of candidates){
+    const cNorm = c.toLowerCase();
+    // includes
+    const incl = normalized.find(x => x.norm.includes(cNorm));
+    if(incl) return incl.orig;
+  }
+  return fields[0]; // fallback
+}
+
+/* Load CSV via PapaParse — returns {rows, fields} */
+function papaLoad(url){
+  return new Promise((resolve, reject) => {
+    Papa.parse(url, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: h => typeof h === 'string' ? h.trim() : h,
+      complete: (res) => {
+        // filter out empty rows (all fields empty)
+        const rows = (res.data || []).filter(r => Object.values(r).some(v => v !== null && v !== undefined && String(v).trim() !== ''));
+        resolve({rows, fields: res.meta && res.meta.fields ? res.meta.fields.map(f => f.trim()) : []});
+      },
+      error: err => reject(err)
+    });
+  });
+}
+
+/* Populate functions */
+async function loadAll(){
+  try{
+    $('loadBtn').disabled = true;
+    $('loadStatus').textContent = 'Loading sheets...';
+    const [q, it, ev, rg] = await Promise.all([
+      papaLoad(QUEST_CSV),
+      papaLoad(ITEM_CSV),
+      papaLoad(EV_CSV),
+      papaLoad(REGI_CSV)
+    ]);
+    // store
+    questRows = q.rows; questFields = q.fields;
+    itemRows  = it.rows;  itemFields  = it.fields;
+    evRows    = ev.rows;  evFields    = ev.fields;
+    regiRows  = rg.rows;  regiFields  = rg.fields;
+
+    // initialize UI
+    populateQuestRegions();
+    populateItemRegions();
+    populateEvRegions();
+    populateRegiTimes();
+
+    // show app
+    $('loading').style.display = 'none';
+    $('app').classList.remove('hidden');
+    $('app').style.display = 'block';
+    $('loadStatus').textContent = 'Loaded.';
+  }catch(e){
+    console.error('Load error', e);
+    $('loadStatus').textContent = 'Error loading sheets — see console.';
+    $('loadBtn').disabled = false;
+  }
+}
+
+/* ========== Quest Helper ========== */
+function populateQuestRegions(){
+  const regionKey = findFieldKey(questFields, ['region']);
+  const questKey = findFieldKey(questFields, ['quest','name']);
+  if(!regionKey) return;
+  const sel = $('questRegion');
+  sel.innerHTML = '<option value="">Select Region</option>';
+  const regions = Array.from(new Set(questRows.map(r => (r[regionKey]||'').toString().trim()).filter(Boolean)));
+  regions.forEach(r => sel.appendChild(new Option(r,r)));
+  // enable on change
+  sel.onchange = () => {
+    const qsel = $('questQuest');
+    qsel.innerHTML = '<option value="">Select Quest</option>';
+    qsel.disabled = true;
+    const region = sel.value;
+    if(!region) return;
+    const quests = Array.from(new Set(questRows.filter(row => (row[regionKey]||'').toString().trim() === region).map(r => (r[questKey]||'').toString().trim()).filter(Boolean)));
+    quests.forEach(q => qsel.appendChild(new Option(q,q)));
+    qsel.disabled = false;
+  };
+}
+
+$('questShow').addEventListener('click', () => {
+  const regionKey = findFieldKey(questFields,['region']);
+  const questKey  = findFieldKey(questFields,['quest','name']);
+  const contentKey = findFieldKey(questFields,['content','contents','description','text']);
+  const region = $('questRegion').value;
+  const quest = $('questQuest').value;
+  const out = $('questOutput');
+  out.innerHTML = '';
+  if(!region || !quest){ out.innerHTML = ''; return; }
+  const rows = questRows.filter(r => (r[regionKey]||'').toString().trim() === region && (r[questKey]||'').toString().trim() === quest);
+  if(!rows.length){ out.innerHTML = '<p class="muted">No results.</p>'; return; }
+  // render table with headers region/quest/content (use original field names if present)
+  const headers = [regionKey, questKey, contentKey].map(h => h || '');
+  let html = '<table><thead><tr>';
+  headers.forEach(h => html += `<th>${escapeHtml(h)}</th>`);
+  html += '</tr></thead><tbody>';
+  rows.forEach(r=>{
+    html += '<tr>';
+    headers.forEach(h => {
+      const val = r[h] === undefined || r[h] === null ? '' : r[h];
+      if(h === contentKey){
+        html += `<td><pre class="content">${escapeHtml(String(val))}</pre></td>`;
+      } else {
+        html += `<td>${escapeHtml(String(val))}</td>`;
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  out.innerHTML = html;
+});
+
+/* ========== Special Item Finder ========== */
+function populateItemRegions(){
+  const regionKey = findFieldKey(itemFields,['region']);
+  const sel = $('itemRegion'); sel.innerHTML = '<option value="">Select Region</option>';
+  if(!regionKey) return;
+  const regions = Array.from(new Set(itemRows.map(r => (r[regionKey]||'').toString().trim()).filter(Boolean)));
+  regions.forEach(r => sel.appendChild(new Option(r,r)));
+  sel.onchange = () => {
+    const locKey = findFieldKey(itemFields,['location','where','place']);
+    const locSel = $('itemLocation'); locSel.innerHTML = '<option value="">Select Location</option>';
+    $('itemName').innerHTML = '<option value="">Select Item</option>'; $('itemName').disabled = true;
+    const region = sel.value;
+    if(!region) { locSel.disabled = true; return; }
+    const locs = Array.from(new Set(itemRows.filter(row => (row[regionKey]||'').toString().trim() === region).map(r => (r[locKey]||'').toString().trim()).filter(Boolean)));
+    locs.forEach(l => locSel.appendChild(new Option(l,l)));
+    locSel.disabled = false;
+  };
+
+  $('itemLocation').onchange = () => {
+    const region = $('itemRegion').value;
+    const location = $('itemLocation').value;
+    const itemKey = findFieldKey(itemFields,['item','name']);
+    const nameSel = $('itemName'); nameSel.innerHTML = '<option value="">Select Item</option>';
+    if(!region || !location) { nameSel.disabled = true; return; }
+    const items = Array.from(new Set(itemRows.filter(row => (row[regionKey]||'').toString().trim() === region && (row[(findFieldKey(itemFields,['location','where','place']))]||'').toString().trim() === location).map(r => (r[itemKey]||'').toString().trim()).filter(Boolean)));
+    items.forEach(i => nameSel.appendChild(new Option(i,i)));
+    nameSel.disabled = false;
+  };
+
+  // manual fuzzy search
+  $('itemManualBtn').addEventListener('click', () => {
+    const q = normalize($('itemManual').value || '');
+    const out = $('itemManualOut'); out.innerHTML = '';
+    if(!q){ out.innerHTML = '<p class="muted">Please enter a search term.</p>'; return; }
+    const itemKey = findFieldKey(itemFields,['item','name']);
+    const matches = itemRows.filter(r => normalize(r[itemKey]||'').includes(q));
+    out.innerHTML = matches.length ? renderTable(itemFields, matches) : '<p class="muted">Currently not listed.</p>';
+  });
+  $('itemManualReset').addEventListener('click', () => { $('itemManual').value=''; $('itemManualOut').innerHTML=''; });
+
+  $('itemFilterBtn').addEventListener('click', () => {
+    const regionKey = findFieldKey(itemFields,['region']);
+    const locKey = findFieldKey(itemFields,['location','where','place']);
+    const itemKey = findFieldKey(itemFields,['item','name']);
+    const region = $('itemRegion').value;
+    const location = $('itemLocation').value;
+    const item = $('itemName').value;
+    const out = $('itemFilterOut'); out.innerHTML = '';
+    if(!region || !location || !item){ out.innerHTML = '<p class="muted">Please select region, location and item.</p>'; return; }
+    const rows = itemRows.filter(r => (r[regionKey]||'').toString().trim() === region && (r[locKey]||'').toString().trim() === location && (r[itemKey]||'').toString().trim() === item);
+    out.innerHTML = rows.length ? renderTable(itemFields, rows) : '<p class="muted">No results.</p>';
+  });
+
+  $('itemFilterReset').addEventListener('click', () => {
+    $('itemRegion').selectedIndex = 0;
+    $('itemLocation').innerHTML = '<option value="">Select Location</option>'; $('itemLocation').disabled = true;
+    $('itemName').innerHTML = '<option value="">Select Item</option>'; $('itemName').disabled = true;
+    $('itemFilterOut').innerHTML = '';
+  });
+}
+
+/* ========== EV Spot Finder ========== */
+function populateEvRegions(){
+  const regionKey = evFields && evFields.length ? evFields[0] : null; // assume column A is region
+  if(!regionKey) return;
+  const sel = $('evRegion'); sel.innerHTML = '<option value="">Select Region</option>';
+  const regions = Array.from(new Set(evRows.map(r => (r[regionKey]||'').toString().trim()).filter(Boolean)));
+  regions.forEach(r => sel.appendChild(new Option(r,r)));
+  sel.onchange = () => {
+    const selEv = $('evSelect'); selEv.innerHTML = '<option value="">Select EV</option>';
+    const evKey = evFields.length >= 3 ? evFields[2] : evFields[1] || evFields[0];
+    const region = sel.value;
+    if(!region){ selEv.disabled = true; return; }
+    const evs = Array.from(new Set(evRows.filter(row => (row[regionKey]||'').toString().trim() === region).map(r => (r[evKey]||'').toString().trim()).filter(Boolean)));
+    evs.forEach(e => selEv.appendChild(new Option(e,e)));
+    selEv.disabled = false;
+  };
+
+  $('evShow').addEventListener('click', () => {
+    const region = $('evRegion').value;
+    const evVal = $('evSelect').value;
+    const out = $('evOutput'); out.innerHTML = '';
+    if(!region || !evVal){ out.innerHTML = '<p class="muted">Please select region and EV.</p>'; return; }
+    // show columns A-E if present
+    const keys = evFields.slice(0, Math.min(5, evFields.length));
+    const regionKeyLocal = evFields[0];
+    const evKey = evFields.length >= 3 ? evFields[2] : evFields[1] || evFields[0];
+    const rows = evRows.filter(r => (r[regionKeyLocal]||'').toString().trim() === region && (r[evKey]||'').toString().trim() === evVal);
+    out.innerHTML = rows.length ? renderTable(keys, rows) : '<p class="muted">No results.</p>';
+  });
+
+  $('evReset').addEventListener('click', () => {
+    $('evRegion').selectedIndex = 0;
+    $('evSelect').innerHTML = '<option value="">Select EV</option>'; $('evSelect').disabled = true;
+    $('evOutput').innerHTML = '';
+  });
+}
+
+/* ========== Regi Trio Check ========== */
+function populateRegiTimes(){
+  const timeKey = findFieldKey(regiFields, ['time']);
+  const sel = $('regiTime'); sel.innerHTML = '<option value="">Select Time</option>';
+  if(!timeKey) return;
+  const times = Array.from(new Set(regiRows.map(r => (r[timeKey]||'').toString().trim()).filter(Boolean)));
+  times.forEach(t => sel.appendChild(new Option(t,t)));
+  // show handler
+  $('regiShow').addEventListener('click', () => {
+    const t = $('regiTime').value;
+    const out = $('regiOutput'); out.innerHTML = '';
+    if(!t){ out.innerHTML = '<p class="muted">No time selected.</p>'; return; }
+    if(!regiRows.length){ out.innerHTML = '<p class="muted">No data loaded.</p>'; return; }
+    const keys = regiFields.length ? regiFields.slice(0,3) : Object.keys(regiRows[0]).slice(0,3);
+    const timeKeyLocal = findFieldKey(regiFields, ['time']) || Object.keys(regiRows[0])[0];
+    const rows = regiRows.filter(r => ((r[timeKeyLocal]||'').toString().trim() === t));
+    if(!rows.length){ out.innerHTML = '<p class="muted">No results.</p>'; return; }
+    out.innerHTML = renderTable(keys, rows);
+  });
+  $('regiReset').addEventListener('click', () => {
+    $('regiTime').selectedIndex = 0;
+    $('regiOutput').innerHTML = '';
+  });
+}
+
+/* ========== Shoal Cave ========== */
+$('shoalBtn').addEventListener('click', () => {
+  const now = new Date();
+  const utcMinutes = now.getUTCHours()*60 + now.getUTCMinutes();
+  const windows = [
+    [0, 3*60],
+    [6*60, 9*60],
+    [12*60, 15*60],
+    [18*60, 21*60]
+  ];
+  const isLow = windows.some(([s,e]) => utcMinutes >= s && utcMinutes < e);
+  $('shoalOutput').innerHTML = `<p>UTC time: ${String(now.getUTCHours()).padStart(2,'0')}:${String(now.getUTCMinutes()).padStart(2,'0')} — <strong>${isLow ? 'Lowtide' : 'Hightide'}</strong></p>`;
+});
+
+/* ===== Helpers for rendering tables ===== */
+function renderTable(headers, rows){
+  if(!rows.length) return '<p class="muted">No results.</p>';
+  let html = '<table><thead><tr>';
+  headers.forEach(h => html += `<th>${escapeHtml(h)}</th>`);
+  html += '</tr></thead><tbody>';
+  rows.forEach(r => {
+    html += '<tr>';
+    headers.forEach(h => {
+      const v = r[h] === undefined || r[h] === null ? '' : String(r[h]);
+      // if header name contains 'content' show pre
+      if(h && normalize(h).includes('content')) {
+        html += `<td><pre class="content">${escapeHtml(v)}</pre></td>`;
+      } else {
+        html += `<td>${escapeHtml(v)}</td>`;
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+/* ========== Boot ========== */
+$('loadBtn').addEventListener('click', loadAll);
+$('darkToggle').addEventListener('click', e => {
+  document.body.classList.toggle('dark-mode');
+  $('darkToggle').textContent = document.body.classList.contains('dark-mode') ? '☀️ Light Mode' : '🌙 Dark Mode';
+});
+</script>
+</body>
+</html>
+
