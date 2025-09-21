@@ -7,7 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
     :root{
-      --accent:#F0F0F0;
+      --accent:#000000;
       --highlight:#026503;
       --bg:#666769;
       --text:#000000;
@@ -22,7 +22,7 @@
     .loading-screen{height:100vh;display:flex;align-items:center;justify-content:center}
     .loader-inner{text-align:center}
     .loader-inner img{max-width:220px;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto}
-    .card{border-radius:var(--card-radius);padding:14px;margin:14px 0;box-shadow:0 6px 18px rgba(10,20,40,0.06);border:1px solid rgba(10,20,40,0.04);background:#fff}
+    .card{border-radius:var(--card-radius);padding:14px;margin:14px 0;box-shadow:0 6px 18px rgba(10,20,40,0.06);border:1px solid rgba(10,20,40,0.04);background:#026503}
     .card.highlight{background:var(--highlight)}
     .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:12px}
     select,input[type="text"]{padding:8px;border-radius:8px;border:1px solid #e6eef9;width:100%;max-width:420px;background:white;color:#111}
@@ -34,7 +34,7 @@
     .hidden{display:none}
 
     /* Dark mode */
-    .dark-mode{--bg:#0b0b0b;--text:#e6eef9;background:#0b0b0b;color:#e6eef9}
+    .dark-mode{--bg:#1A252C;--text:#e6eef9;background:#0b0b0b;color:#e6eef9}
     .dark-mode .card{box-shadow:none;border:1px solid rgba(255,255,255,0.04);background:#0f1113}
     .dark-mode .card.highlight{background:#5a4636}
     .dark-mode select,input[type="text"]{background:#111214;color:#e6eef9;border:1px solid rgba(255,255,255,0.06)}
