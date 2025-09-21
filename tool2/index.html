@@ -193,7 +193,7 @@ function papaLoad(url){
 async function loadAll(){
   try{
     $('loadBtn').disabled = true;
-    $('loadStatus').textContent = 'Loading sheets...';
+    $('loadStatus').textContent = 'Loading...';
     const [q, it, ev, rg] = await Promise.all([
       papaLoad(QUEST_CSV),
       papaLoad(ITEM_CSV),
