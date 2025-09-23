@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>PBO FAQ</title>
+<style>
+  body {
+    font-family: Inter, system-ui, Arial, sans-serif;
+    margin: 0;
+    background: #666769; /* Light mode default */
+    color: #fff;
+  }
+  body.dark { background: #1A252C; }
+  .centered {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    flex-direction: column;
+    text-align: center;
+  }
+  img.logo { max-width: 200px; margin-bottom: 20px; }
+  .card {
+    background: #026503;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 600px;
+    margin: 20px auto;
+  }
+  body.dark .card { background: #023804; }
+  h1 { margin: 0 0 20px 0; color: #fff; }
+  label { display: block; margin-top: 12px; margin-bottom: 6px; }
+  select, button {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    margin-bottom: 10px;
+  }
+  select {
+    background: #fff;
+    color: #000;
+  }
+  body.dark select {
+    background: #000;
+    color: #fff;
+    border: 1px solid #444;
+  }
+  button {
+    cursor: pointer;
+    background: #0b74de;
+    color: #fff;
+    border: none;
+  }
+  button:hover { background: #095bb0; }
+  .results {
+    margin-top: 20px;
+    padding: 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    white-space: pre-wrap; /* für Absätze/Zeilenumbrüche */
+  }
+  .toggle {
+    margin-top: 12px;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+<div id="loading" class="centered">
+  <img src="https://i.imgur.com/32WkKU8.png" alt="Loading"/>
+  <p>Loading data...</p>
+</div>
+
+<div id="app" style="display:none">
+  <div class="card">
+    <h1>PBO FAQ</h1>
+    <label for="typeSelect">Type</label>
+    <select id="typeSelect"><option value="">-- choose type --</option></select>
+
+    <label for="subtypeSelect">Subtype</label>
+    <select id="subtypeSelect" disabled><option value="">-- choose subtype --</option></select>
+
+    <button id="showBtn">Show</button>
+    <button id="resetBtn">Reset</button>
+    <div class="toggle" id="toggleMode">Toggle Dark/Light Mode</div>
+    <div id="results" class="results" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSfISqMJoPKSFFO4tRUY1V_L7J5C02XG7xbs_T0y7dcWdPjvAKX4064cVGHGgYJ7PFkiOHoy74j7KyU/pub?output=csv";
+
+let allData = [];
+
+async function loadData(){
+  try{
+    const res = await fetch(CSV_URL);
+    const text = await res.text();
+    const rows = text.split("\n").map(r=>r.split(","));
+    // Header in row[0] → Type, Subtype, Explanation
+    allData = rows.slice(1).map(r=>({
+      Type: r[0]?.trim(),
+      Subtype: r[1]?.trim(),
+      Explanation: r.slice(2).join(",").trim()
+    }));
+    populateTypes();
+    document.getElementById("loading").style.display="none";
+    document.getElementById("app").style.display="block";
+  }catch(e){
+    document.getElementById("loading").innerHTML="<p>Error loading data.</p>";
+    console.error(e);
+  }
+}
+
+function populateTypes(){
+  const typeSelect = document.getElementById("typeSelect");
+  typeSelect.innerHTML = '<option value="">-- choose type --</option>';
+  const uniqueTypes = [...new Set(allData.map(d=>d.Type).filter(Boolean))];
+  uniqueTypes.forEach(t=>{
+    const opt=document.createElement("option");
+    opt.value=t; opt.textContent=t;
+    typeSelect.appendChild(opt);
+  });
+}
+
+function populateSubtypes(type){
+  const subtypeSelect = document.getElementById("subtypeSelect");
+  subtypeSelect.innerHTML = '<option value="">-- choose subtype --</option>';
+  if(!type){ subtypeSelect.disabled=true; return; }
+  const filtered = allData.filter(d=>d.Type===type);
+  const uniqueSubs = [...new Set(filtered.map(d=>d.Subtype).filter(Boolean))];
+  uniqueSubs.forEach(s=>{
+    const opt=document.createElement("option");
+    opt.value=s; opt.textContent=s;
+    subtypeSelect.appendChild(opt);
+  });
+  subtypeSelect.disabled=false;
+}
+
+document.getElementById("typeSelect").addEventListener("change", e=>{
+  populateSubtypes(e.target.value);
+});
+
+document.getElementById("showBtn").addEventListener("click", ()=>{
+  const type = document.getElementById("typeSelect").value;
+  const sub = document.getElementById("subtypeSelect").value;
+  if(!type || !sub){ alert("Please select both type and subtype."); return; }
+  const match = allData.find(d=>d.Type===type && d.Subtype===sub);
+  if(match){
+    document.getElementById("results").style.display="block";
+    document.getElementById("results").textContent = match.Explanation;
+  } else {
+    document.getElementById("results").style.display="block";
+    document.getElementById("results").textContent = "No explanation found.";
+  }
+});
+
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  document.getElementById("typeSelect").value="";
+  document.getElementById("subtypeSelect").innerHTML='<option value="">-- choose subtype --</option>';
+  document.getElementById("subtypeSelect").disabled=true;
+  document.getElementById("results").style.display="none";
+});
+
+document.getElementById("toggleMode").addEventListener("click", ()=>{
+  document.body.classList.toggle("dark");
+});
+
+loadData();
+</script>
+</body>
+</html>
