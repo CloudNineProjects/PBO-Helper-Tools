@@ -51,8 +51,8 @@
     padding:10px 18px;
     border-radius:8px;
     border:none;
-    background:#0b74de;
-    color:#fff;
+    background:#F0F0F0;
+    color:#000000;
     cursor:pointer;
     font-size:16px;
     width:auto;  /* fix: no full width */
@@ -96,7 +96,7 @@
 </style>
 </head>
 <body>
-<div id="modeToggle" class="mode-toggle">🌙 Light Mode</div>
+<div id="modeToggle" class="mode-toggle">🌙 Dark Mode</div>
 
 <!-- Loading screen -->
 <div id="loading" class="loader">
@@ -194,7 +194,7 @@ $("resetBtn").addEventListener("click",()=>{
 
 /* mode toggle with text */
 const toggle=$("modeToggle");
-function updateToggle(){toggle.textContent=document.body.classList.contains("dark")?"☀️ Dark Mode":"🌙 Light Mode";}
+function updateToggle(){toggle.textContent=document.body.classList.contains("dark")?"☀️ Light Mode":"🌙 Dark Mode";}
 toggle.addEventListener("click",()=>{document.body.classList.toggle("dark");updateToggle();});
 updateToggle();
 
