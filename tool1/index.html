@@ -238,7 +238,7 @@
 
       for (let [region, data] of Object.entries(spawnData)) {
         const headers = data[0];
-        const rows = data.slice(1).filter(r => r[2] && r[2].toLowerCase() === query);
+        const rows = data.slice(1).filter(r => r[2] && r[2].toLowerCase().includes(query));
         if (rows.length) {
           if (optimized) {
             const optimizedRows = rows.filter(row => {
@@ -356,7 +356,7 @@
     document.getElementById("pvpSearchBtn").addEventListener("click", () => {
       const query = document.getElementById("pvpInput").value.trim().toLowerCase();
       const headers = pvpData[0];
-      const rows = pvpData.slice(1).filter(r => r[0] && r[0].toLowerCase() === query);
+      const rows = pvpData.slice(1).filter(r => r[0] && r[0].toLowerCase().includes(query));
       const container = document.getElementById("pvpResults");
       container.innerHTML = rows.length ? renderTable(headers, rows) : "<p>Currently not listed...</p>";
     });
