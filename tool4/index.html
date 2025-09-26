@@ -169,7 +169,9 @@ function renderResults(list){
   [keyA,keyB,keyC,keyD].forEach(h=> html+=`<th>${escapeHtml(h)}</th>`);
   html+='</tr></thead><tbody>';
   list.forEach(r=>{
-    const linkVal = r[keyC] ? `<a href="${escapeHtml(r[keyC])}" target="_blank">${escapeHtml(r[keyC])}</a>` : '';
+    const rawUrl = (r[keyC] || '').trim();
+    const safeText = escapeHtml(rawUrl);
+    const linkVal = rawUrl ? `<a href="${rawUrl}" target="_blank" rel="noopener noreferrer">${safeText}</a>` : '';
     html+='<tr>';
     html+=`<td>${escapeHtml(r[keyA]||'')}</td>`;
     html+=`<td>${escapeHtml(r[keyB]||'')}</td>`;
