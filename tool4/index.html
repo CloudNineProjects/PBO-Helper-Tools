@@ -71,7 +71,7 @@
   body.dark .card{background:var(--card-dark)}
   h1{margin:0 0 12px;color:var(--title-color);font-size:20px}
   label{display:block;font-size:0.95rem;margin-top:10px;margin-bottom:6px;color:#fff}
-  select,button,input[type="text"]{
+  select,button{
     width:100%;
     box-sizing:border-box;
     padding:10px 12px;
@@ -85,7 +85,7 @@
   .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .controls button{width:auto;padding:10px 14px;border-radius:8px}
   .results{margin-top:12px;background:rgba(255,255,255,0.06);padding:12px;border-radius:8px;color:inherit}
-  pre.colD{white-space:pre-wrap;margin:0;font-family:inherit}
+  pre.comments{white-space:pre-wrap;margin:0;font-family:inherit}
   table{width:100%;border-collapse:collapse;margin-top:8px}
   th,td{text-align:left;padding:8px;border-bottom:1px solid rgba(255,255,255,0.06);vertical-align:top}
   th{background:rgba(0,0,0,0.06)}
@@ -110,11 +110,8 @@
     <div class="card">
       <h1>Team Database</h1>
 
-      <label for="colA">Select A</label>
-      <select id="colA"><option value="">-- choose A --</option></select>
-
-      <label for="colB">Select B</label>
-      <select id="colB" disabled><option value="">-- choose B --</option></select>
+      <label for="colA">Select Content</label>
+      <select id="colA"><option value="">-- choose --</option></select>
 
       <div class="controls" style="margin-top:8px">
         <button id="showBtn" style="background:#0b74de;color:#fff">Show</button>
@@ -126,142 +123,84 @@
   </div>
 
 <script>
-/* Utility */
 const $ = id => document.getElementById(id);
 const escapeHtml = s => s == null ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZms-FGa78v8FvI5CqYGTck1d_TU0yzWGc-UVXhoEpcp3W0zF5aPdr5ZGFYc-nfWUkgVUhtEDZCfR/pub?output=csv";
 
-let rows = [], fields = [];
-let keyA = null, keyB = null, keyC = null, keyD = null;
+let rows = [];
+let keyA="Content", keyB="Accessibility", keyC="Team Link", keyD="Comments";
 
-/* header detection */
-function findKey(cands){
-  if(!fields || !fields.length) return null;
-  for(const c of cands){
-    const f = fields.find(h => h && h.trim().toLowerCase() === c.toLowerCase());
-    if(f) return f;
-  }
-  for(const c of cands){
-    const f = fields.find(h => h && h.trim().toLowerCase().includes(c.toLowerCase()));
-    if(f) return f;
-  }
-  return fields[0];
-}
-
-/* load CSV via PapaParse */
 function loadData(){
   $('loadBtn').disabled = true;
   $('loadingText').style.display = 'block';
   $('loadingText').textContent = 'Loading...';
   Papa.parse(CSV_URL, {
-    download: true,
-    header: true,
-    skipEmptyLines: true,
-    transformHeader: h => h ? h.trim() : h,
-    complete: res => {
-      // filter empty rows
-      rows = (res.data || []).filter(r => Object.values(r).some(v => v !== null && v !== undefined && String(v).trim() !== ''));
-      fields = res.meta && res.meta.fields ? res.meta.fields.map(f => f.trim()) : Object.keys(rows[0] || {});
-      // detect keys for A-D (prefer common names)
-      keyA = findKey(['a','col a','type','region','name']);
-      keyB = findKey(['b','col b','subtype','location']);
-      keyC = findKey(['c','col c','info','notes']);
-      keyD = findKey(['d','col d','details','description','explanation']);
-      // populate selects
+    download:true,
+    header:true,
+    skipEmptyLines:true,
+    complete: res=>{
+      rows = res.data.filter(r=>r.Content && r.Content.trim());
       populateA();
-      // display app
-      $('loading').style.display = 'none';
-      $('app').style.display = 'block';
+      $('loading').style.display='none';
+      $('app').style.display='block';
     },
-    error: err => {
-      console.error('CSV load error', err);
-      $('loadingText').textContent = 'Error loading data';
-      $('loadBtn').disabled = false;
+    error: err=>{
+      console.error(err);
+      $('loadingText').textContent='Error loading data';
+      $('loadBtn').disabled=false;
     }
   });
 }
 
-/* populate A select (unique values, preserve order) */
 function populateA(){
-  const sel = $('colA');
-  sel.innerHTML = '<option value="">-- choose A --</option>';
-  if(!keyA) return;
-  const vals = rows.map(r => (r[keyA]||'').toString().trim()).filter(Boolean);
-  const seen = new Set();
-  for(const v of vals){
-    if(!seen.has(v)){ sel.appendChild(new Option(v,v)); seen.add(v); }
-  }
-  $('colB').innerHTML = '<option value="">-- choose B --</option>'; $('colB').disabled = true;
+  const sel=$('colA');
+  sel.innerHTML='<option value="">-- choose --</option>';
+  const seen=new Set();
+  rows.forEach(r=>{
+    const val=r[keyA].trim();
+    if(!seen.has(val)){ sel.appendChild(new Option(val,val)); seen.add(val); }
+  });
 }
 
-/* populate B for chosen A (do NOT deduplicate) */
-function populateBFor(aVal){
-  const sel = $('colB');
-  sel.innerHTML = '<option value="">-- choose B --</option>';
-  sel.disabled = true;
-  if(!aVal) return;
-  const matched = rows.filter(r => (r[keyA]||'').toString().trim() === aVal);
-  matched.forEach(r => {
-    const v = (r[keyB]||'').toString().trim();
-    const opt = document.createElement('option'); opt.value = v; opt.textContent = v;
-    sel.appendChild(opt);
+function renderResults(list){
+  if(!list.length) return '<p>No results.</p>';
+  let html='<table><thead><tr>';
+  [keyA,keyB,keyC,keyD].forEach(h=> html+=`<th>${escapeHtml(h)}</th>`);
+  html+='</tr></thead><tbody>';
+  list.forEach(r=>{
+    const linkVal = r[keyC] ? `<a href="${escapeHtml(r[keyC])}" target="_blank">${escapeHtml(r[keyC])}</a>` : '';
+    html+='<tr>';
+    html+=`<td>${escapeHtml(r[keyA]||'')}</td>`;
+    html+=`<td>${escapeHtml(r[keyB]||'')}</td>`;
+    html+=`<td>${linkVal}</td>`;
+    html+=`<td><pre class="comments">${escapeHtml(r[keyD]||'')}</pre></td>`;
+    html+='</tr>';
   });
-  sel.disabled = false;
-}
-
-/* render table A-D for matching rows */
-function renderResults(m){
-  if(!m.length) return '<p>No results.</p>';
-  const headers = [keyA, keyB, keyC, keyD].map(h => h || '');
-  let html = '<table><thead><tr>';
-  headers.forEach(h => html += `<th>${escapeHtml(h)}</th>`);
-  html += '</tr></thead><tbody>';
-  m.forEach(r => {
-    html += '<tr>';
-    html += `<td>${escapeHtml(r[keyA]||'')}</td>`;
-    html += `<td>${escapeHtml(r[keyB]||'')}</td>`;
-    html += `<td>${escapeHtml(r[keyC]||'')}</td>`;
-    const dVal = r[keyD] == null ? '' : String(r[keyD]);
-    html += `<td><pre class="colD">${escapeHtml(dVal)}</pre></td>`;
-    html += '</tr>';
-  });
-  html += '</tbody></table>';
+  html+='</tbody></table>';
   return html;
 }
 
-/* events */
-$('colA').addEventListener('change', e => {
-  populateBFor(e.target.value);
-  $('out').style.display = 'none';
+$('showBtn').addEventListener('click', ()=>{
+  const a=$('colA').value;
+  if(!a){alert('Please select Content');return;}
+  const matched=rows.filter(r=>r[keyA].trim()===a);
+  $('out').innerHTML=renderResults(matched);
+  $('out').style.display='block';
 });
 
-$('showBtn').addEventListener('click', () => {
-  const a = $('colA').value;
-  const b = $('colB').value;
-  if(!a || !b){ alert('Please select A and B'); return; }
-  const matched = rows.filter(r => (r[keyA]||'').toString().trim() === a && (r[keyB]||'').toString().trim() === b);
-  $('out').innerHTML = renderResults(matched);
-  $('out').style.display = 'block';
+$('resetBtn').addEventListener('click', ()=>{
+  $('colA').selectedIndex=0;
+  $('out').innerHTML='';
+  $('out').style.display='none';
 });
 
-$('resetBtn').addEventListener('click', () => {
-  $('colA').selectedIndex = 0;
-  $('colB').innerHTML = '<option value="">-- choose B --</option>';
-  $('colB').disabled = true;
-  $('out').innerHTML = '';
-  $('out').style.display = 'none';
-});
-
-/* mode toggle handling with label */
-const modeToggle = $('modeToggle');
-function updateToggle(){ modeToggle.textContent = document.body.classList.contains('dark') ? '☀️ Dark Mode' : '🌙 Light Mode'; }
-modeToggle.addEventListener('click', () => { document.body.classList.toggle('dark'); updateToggle(); });
+const modeToggle=$('modeToggle');
+function updateToggle(){ modeToggle.textContent=document.body.classList.contains('dark')?'☀️ Dark Mode':'🌙 Light Mode'; }
+modeToggle.addEventListener('click',()=>{document.body.classList.toggle('dark');updateToggle();});
 updateToggle();
 
-/* load button */
-$('loadBtn').addEventListener('click', () => { $('loadingText').style.display='block'; $('loadingText').textContent='Loading...'; loadData(); });
-
+$('loadBtn').addEventListener('click', loadData);
 </script>
 </body>
 </html>
