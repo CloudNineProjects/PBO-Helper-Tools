@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PBO Route Planner</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    :root{
+      --bg-light:#666769;
+      --bg-dark:#1A252C;
+      --card-light:#026503;
+      --card-dark:#023804;
+      --accent:#F0F0F0;
+      --text-light:#fff;
+      --muted:rgba(255,255,255,0.85);
+    }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif}
+    body{background:var(--bg-light);color:var(--text-light)}
+    body.dark{background:var(--bg-dark)}
+    /* mode toggle */
+    .mode-toggle{
+      position:fixed; top:12px; right:12px; z-index:2000;
+      background:rgba(255,255,255,0.9); color:#111; padding:6px 10px;
+      border-radius:8px; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:14px;
+    }
+    body.dark .mode-toggle{background:rgba(0,0,0,0.6); color:#fff}
+    /* loading */
+    .loader {
+      min-height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px; text-align:center;
+    }
+    .loader img.logo { width:220px; height:220px; object-fit:cover; border-radius:50%; box-shadow:none; }
+    .load-btn{ padding:10px 18px; border-radius:8px; border:none; background:var(--accent); color:#000; cursor:pointer; font-size:16px; width:auto; }
+    .loading-text{ color:var(--muted); margin-top:6px; font-size:0.95rem; }
+
+    /* app */
+    .wrap{ max-width:940px; margin:26px auto; padding:16px; }
+    .card{ border-radius:12px; padding:18px; background:var(--card-light); color:var(--text-light); box-shadow:0 10px 30px rgba(0,0,0,0.08); }
+    body.dark .card{ background:var(--card-dark); }
+    h1{ margin:0 0 10px 0; color:var(--text-light); font-size:20px;}
+    label{ display:block; margin-top:10px; margin-bottom:6px; font-size:0.95rem; color:var(--text-light) }
+    select, button { padding:10px 12px; border-radius:8px; font-size:15px; border:1px solid rgba(0,0,0,0.06); width:100%; box-sizing:border-box; margin-bottom:10px; }
+    select{ background:#fff; color:#000; }
+    body.dark select{ background:#000; color:#fff; border:1px solid rgba(255,255,255,0.06); }
+    .controls{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .controls button{ width:auto; padding:10px 14px; border-radius:8px; cursor:pointer; }
+    .btn-primary{ background:var(--accent); color:#000; border:none; }
+    .btn-secondary{ background:#eef3fb; color:#111; border:1px solid rgba(0,0,0,0.05); }
+    .muted{ color:rgba(255,255,255,0.8); font-size:0.95rem; }
+
+    /* table & image */
+    .results{ margin-top:14px; background:rgba(255,255,255,0.04); padding:12px; border-radius:8px; }
+    table{ width:100%; border-collapse:collapse; }
+    th,td{ padding:10px; border-bottom:1px solid rgba(255,255,255,0.06); text-align:left; vertical-align:top; }
+    th{ background:rgba(0,0,0,0.06); }
+    .preview { margin-top:12px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; }
+    .preview img { max-width:360px; width:100%; height:auto; border-radius:8px; cursor:pointer; box-shadow:0 8px 20px rgba(0,0,0,0.25); }
+    .preview a { display:inline-block; text-decoration:none; color:inherit; }
+
+    /* modal */
+    .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.75); z-index:3000; }
+    .modal img{ max-width:95%; max-height:95%; border-radius:8px; box-shadow:0 14px 40px rgba(0,0,0,0.6); }
+
+    @media (max-width:600px){
+      .loader img.logo { width:180px; height:120px; object-fit:cover; }
+      .preview img { max-width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <div id="modeToggle" class="mode-toggle">🌙 Dark Mode</div>
+
+  <!-- Loading screen -->
+  <div id="loading" class="loader">
+    <img class="logo" src="https://i.imgur.com/XZcfQzw.png" alt="CloudNine">
+    <button id="loadBtn" class="load-btn">Load Data</button>
+    <div id="loadingText" class="loading-text" style="display:none">Loading…</div>
+  </div>
+
+  <!-- App -->
+  <div id="app" class="wrap" style="display:none">
+    <div class="card">
+      
+      <label for="regionSelect">Region</label>
+      <select id="regionSelect"><option value="">-- choose region --</option></select>
+
+      <label for="locationSelect">Location</label>
+      <select id="locationSelect" disabled><option value="">-- choose location --</option></select>
+
+      <div class="controls">
+        <button id="showBtn" class="btn-primary">Show</button>
+        <button id="resetBtn" class="btn-secondary">Reset</button>
+      </div>
+
+      <div id="out" class="results" style="display:none"></div>
+      <div id="imagePreview" class="preview" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- modal for full-size image -->
+  <div id="modal" class="modal"><img id="modalImg" src="" alt="full"/></div>
+
+<script>
+  const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR1exPBTlYsrTJ0U4eLuFycLc6Vwwj3jtKgc6s4jZZa7UbSJLB_LJkcnIigkaJIYtBNHsicju6cv3FJ/pub?output=csv";
+
+  // state
+  let rows = [], fields = [];
+  let keyRegion=null, keyLocation=null, keyTeleport=null, keyDirection=null, keyMap=null;
+
+  // helper: find header key by candidate names
+  function findKey(cands){
+    if(!fields || !fields.length) return null;
+    for(const c of cands){
+      const found = fields.find(f => f && f.trim().toLowerCase() === c.toLowerCase());
+      if(found) return found;
+    }
+    for(const c of cands){
+      const found = fields.find(f => f && f.trim().toLowerCase().includes(c.toLowerCase()));
+      if(found) return found;
+    }
+    return fields[0];
+  }
+
+  // fetch CSV via PapaParse
+  function loadCsv(){
+    $('loadBtn').disabled = true;
+    $('loadingText').style.display = 'block';
+    $('loadingText').textContent = 'Loading…';
+    Papa.parse(CSV_URL, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: h => h ? h.trim() : h,
+      complete: function(res){
+        rows = (res.data || []).filter(r => Object.values(r).some(v => v !== null && v !== undefined && String(v).trim() !== ''));
+        fields = res.meta && res.meta.fields ? res.meta.fields.map(f => f.trim()) : Object.keys(rows[0]||{});
+        // detect columns (A-E)
+        keyRegion = findKey(['region','a']);
+        keyLocation = findKey(['location','b']);
+        keyTeleport = findKey(['teleport','c']);
+        keyDirection = findKey(['direction','d']);
+        keyMap = findKey(['map','e']);
+        populateRegions();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+      },
+      error: function(err){
+        console.error('CSV load error', err);
+        $('loadingText').textContent = 'Error loading CSV';
+        $('loadBtn').disabled = false;
+      }
+    });
+  }
+
+  function $ (id) { return document.getElementById(id); }
+
+  function populateRegions(){
+    const sel = $('regionSelect'); sel.innerHTML = '<option value="">-- choose region --</option>';
+    const vals = rows.map(r => (r[keyRegion]||'').toString().trim()).filter(Boolean);
+    const seen = new Set();
+    for(const v of vals){
+      if(!seen.has(v)){ sel.appendChild(new Option(v,v)); seen.add(v); }
+    }
+    $('locationSelect').innerHTML = '<option value="">-- choose location --</option>'; $('locationSelect').disabled = true;
+    $('out').innerHTML = ''; $('out').style.display = 'none'; $('imagePreview').style.display='none';
+  }
+
+  function populateLocationsFor(region){
+    const sel = $('locationSelect'); sel.innerHTML = '<option value="">-- choose location --</option>'; sel.disabled = true;
+    if(!region) return;
+    const matched = rows.filter(r => (r[keyRegion]||'').toString().trim() === region);
+    matched.forEach(r => {
+      const v = (r[keyLocation]||'').toString().trim();
+      const opt = document.createElement('option'); opt.value = v; opt.textContent = v;
+      sel.appendChild(opt);
+    });
+    sel.disabled = false;
+  }
+
+  function renderTable(rowsToShow){
+    if(!rowsToShow.length) return '<p>No results.</p>';
+    const headers = [keyRegion,keyLocation,keyTeleport,keyDirection].map(h => h||'');
+    let html = '<table><thead><tr>';
+    headers.forEach(h => html += `<th>${escapeHtml(h)}</th>`);
+    html += '</tr></thead><tbody>';
+    rowsToShow.forEach(r => {
+      html += '<tr>';
+      html += `<td>${escapeHtml(r[keyRegion]||'')}</td>`;
+      html += `<td>${escapeHtml(r[keyLocation]||'')}</td>`;
+      html += `<td>${escapeHtml(r[keyTeleport]||'')}</td>`;
+      html += `<td>${escapeHtml(r[keyDirection]||'')}</td>`;
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    return html;
+  }
+
+  function escapeHtml(s){ return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // hook events
+  $('regionSelect').addEventListener('change', e => {
+    populateLocationsFor(e.target.value);
+    $('out').style.display='none'; $('imagePreview').style.display='none';
+  });
+
+  $('showBtn').addEventListener('click', () => {
+    const region = $('regionSelect').value;
+    const location = $('locationSelect').value;
+    if(!region || !location){ alert('Bitte Region und Location wählen'); return; }
+    const matched = rows.filter(r => (r[keyRegion]||'').toString().trim() === region && (r[keyLocation]||'').toString().trim() === location);
+    $('out').innerHTML = renderTable(matched);
+    $('out').style.display = 'block';
+
+    // show image(s) from keyMap column (E) - display preview(s)
+    const imgs = matched.map(r => (r[keyMap]||'').toString().trim()).filter(Boolean);
+    const preview = $('imagePreview'); preview.innerHTML = '';
+    if(imgs.length){
+      imgs.forEach(url=>{
+        // sometimes URLs may be wrapped in quotes — remove them
+        let raw = url.replace(/^"(.*)"$/,'$1').trim();
+        // if it's a google HYPERLINK formula, extract quoted url
+        const m = raw.match(/"(https?:\/\/[^"]+)"/i);
+        if(m) raw = m[1];
+        // build image element with click to open modal/new tab
+        const a = document.createElement('a'); a.href = raw; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        const img = document.createElement('img'); img.src = raw; img.alt = location + ' map preview';
+        img.addEventListener('click', (ev)=>{ ev.preventDefault(); openModal(raw); });
+        a.appendChild(img);
+        preview.appendChild(a);
+      });
+      preview.style.display = 'flex';
+    } else {
+      preview.style.display = 'none';
+    }
+  });
+
+  $('resetBtn').addEventListener('click', () => {
+    $('regionSelect').selectedIndex = 0;
+    $('locationSelect').innerHTML = '<option value="">-- choose location --</option>'; $('locationSelect').disabled = true;
+    $('out').innerHTML = ''; $('out').style.display='none';
+    $('imagePreview').innerHTML = ''; $('imagePreview').style.display='none';
+  });
+
+  // modal handling
+  function openModal(src){
+    const modal = $('modal'), modalImg = $('modalImg');
+    modalImg.src = src; modal.style.display = 'flex';
+  }
+  $('modal').addEventListener('click', ()=>{ $('modal').style.display = 'none'; $('modalImg').src = ''; });
+
+  // mode toggle
+  const modeToggle = $('modeToggle');
+  function updateToggle(){
+    modeToggle.textContent = document.body.classList.contains('dark') ? '☀️ Light Mode' : '🌙 Dark Mode';
+  }
+  modeToggle.addEventListener('click', ()=>{
+    document.body.classList.toggle('dark');
+    updateToggle();
+  });
+  updateToggle();
+
+  // bind load button
+  document.getElementById('loadBtn').addEventListener('click', loadCsv);
+</script>
+
+</body>
+</html>
