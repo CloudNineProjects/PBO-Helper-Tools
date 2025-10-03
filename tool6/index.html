@@ -3,18 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <title>PBO Checklist</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial, sans-serif; margin:0; background:#666769; color:#fff; }
-    .dark-mode { background:#1A252C; color:#fff; }
-    .card { background:#026503; padding:20px; margin:20px; border-radius:10px; }
-    .dark-mode .card { background:#023804; }
-    button { margin-top:10px; padding:10px 18px; border:none; border-radius:8px; cursor:pointer; }
-    .reset-btn { background:#f0f0f0; color:#000; }
-    .dark-mode .reset-btn { background:#444; color:#fff; }
-    .strike { text-decoration: line-through; opacity:0.6; }
-    .loader { display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; }
-    .loader img { width:220px; height:220px; object-fit:cover; border-radius:50%; }
+body { 
+  font-family: Arial, sans-serif; 
+  margin:0; 
+  background:#666769; 
+  color:#fff; 
+}
+.dark-mode { background:#1A252C; color:#fff; }
+.card { background:#026503; padding:20px; margin:20px; border-radius:10px; }
+.dark-mode .card { background:#023804; }
+button { 
+  margin-top:10px; 
+  padding:10px 18px; 
+  border:none; 
+  border-radius:8px; 
+  cursor:pointer; 
+  font-size: 1rem; 
+}
+.reset-btn { background:#f0f0f0; color:#000; }
+.dark-mode .reset-btn { background:#444; color:#fff; }
+.strike { text-decoration: line-through; opacity:0.6; }
 
+.loader { 
+  display:flex; 
+  flex-direction:column; 
+  justify-content:center; 
+  align-items:center; 
+  height:100vh; 
+}
+.loader img { 
+  width:220px; 
+  max-width:80%;     /* passt sich kleineren Screens an */
+  height:auto;       /* keine Verzerrung */
+  object-fit:cover; 
+  border-radius:50%; 
+}
+
+@media (max-width:600px) { 
+  .loader img { 
+    width:160px; 
+    height:160px;   /* quadratisch, rund bleibt rund */
+  }
+  body { font-size:16px; }
+}
     /* Toggle top right */
     #toggleMode {
       position: fixed;
