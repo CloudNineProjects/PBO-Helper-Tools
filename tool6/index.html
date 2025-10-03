@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PBO Checklist</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; background:#666769; color:#fff; }
+    .dark-mode { background:#1A252C; color:#fff; }
+    .card { background:#026503; padding:20px; margin:20px; border-radius:10px; }
+    .dark-mode .card { background:#023804; }
+    button { margin-top:10px; padding:10px 18px; border:none; border-radius:8px; cursor:pointer; }
+    .reset-btn { background:#f0f0f0; color:#000; }
+    .dark-mode .reset-btn { background:#444; color:#fff; }
+    .strike { text-decoration: line-through; opacity:0.6; }
+    .loader { display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; }
+    .loader img { width:220px; height:220px; object-fit:cover; border-radius:50%; }
+
+    /* Toggle top right */
+    #toggleMode {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: #f0f0f0;
+      color: #000;
+      z-index: 1001;
+    }
+    .dark-mode #toggleMode {
+      background: #444;
+      color: #fff;
+    }
+
+    /* Cards pushed down so toggle looks independent */
+    #content {
+      display:none;
+      position:relative;
+      padding-top: 70px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Dark/Light toggle -->
+  <button id="toggleMode">🌙 Dark Mode</button>
+
+  <div id="loader" class="loader">
+    <img src="https://i.imgur.com/XZcfQzw.png" alt="logo">
+    <button id="loadBtn">Load Data</button>
+    <p id="loadingText" style="display:none;">Loading...</p>
+  </div>
+
+  <div id="content">
+     <div id="daily" class="card">
+      <h2>Daily</h2>
+      <div id="dailyList"></div>
+      <button class="reset-btn" onclick="resetChecks('Daily')">Reset Dailies</button>
+    </div>
+    <div id="weekly" class="card alt">
+      <h2>Weekly</h2>
+      <div id="weeklyList"></div>
+      <button class="reset-btn" onclick="resetChecks('Weekly')">Reset Weeklies</button>
+    </div>
+    <div id="others" class="card">
+      <h2>Others</h2>
+      <div id="othersList"></div>
+    </div>
+
+    <!-- Settings -->
+    <div class="card">
+      <h2>Settings</h2>
+      <button class="reset-btn" onclick="resetAllData()">Reset All Data</button>
+      <p style="font-size:0.9em;opacity:0.8;">⚠️ Clears all saved checks and timestamps.</p>
+    </div>
+  </div>
+
+  <!-- PapaParse -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <script>
+    let dark=false;
+    function toggleMode(){
+      dark=!dark;
+      document.body.classList.toggle("dark-mode",dark);
+      const btn=document.getElementById("toggleMode");
+      btn.textContent=dark?"☀️ Light Mode":"🌙 Dark Mode";
+    }
+    document.getElementById("toggleMode").onclick=toggleMode;
+
+    // Load on button click
+    document.getElementById("loadBtn").onclick=()=>{
+      const loadBtn=document.getElementById("loadBtn");
+      const loadingText=document.getElementById("loadingText");
+      loadBtn.disabled=true;
+      loadingText.style.display="block";
+      loadingText.textContent="Loading...";
+
+      Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vSnQAomUZRPHbub-G3CwuUY9iByOE8Q1KHhat_xUIx3bUSo2TfG3DEkET3dumTbSKUMzDlCr3qo0BeN/pub?output=csv", {
+        download:true,
+        header:true,
+        skipEmptyLines:true,
+        complete: function(results) {
+          const data = results.data;
+          let daily="", weekly="", others="";
+          data.forEach((r,i)=>{
+            if(!r.Activity) return;
+            const id="chk"+i;
+            const group=(r.Time||"").trim();
+            const item=`<label><input type="checkbox" id="${id}" onchange="markCheck('${id}')">
+              ${r.Activity} - ${r.Location||""} - ${r.Content||""} (${r.Time||""})
+              <span id="${id}ts"></span></label><br>`;
+            if(group==="Daily") daily+=item;
+            else if(group==="Weekly") weekly+=item;
+            else others+=item+`<button class="reset-btn" onclick="resetSingle('${id}')">Reset</button><br>`;
+          });
+
+          document.getElementById("dailyList").innerHTML=daily;
+          document.getElementById("weeklyList").innerHTML=weekly;
+          document.getElementById("othersList").innerHTML=others;
+          document.getElementById("loader").style.display="none";
+          document.getElementById("content").style.display="block";
+
+          restoreChecks();
+        }
+      });
+    };
+
+    // Save & restore checks
+    function markCheck(id){
+      const cb=document.getElementById(id);
+      const ts=document.getElementById(id+"ts");
+      const checked=cb.checked;
+
+      if(checked){
+        cb.parentNode.classList.add("strike");
+        ts.textContent=" ("+new Date().toLocaleString()+")";
+      } else {
+        cb.parentNode.classList.remove("strike");
+        ts.textContent="";
+      }
+
+      const saveData=JSON.parse(localStorage.getItem("checklistData")||"{}");
+      saveData[id]={ checked, timestamp: ts.textContent };
+      localStorage.setItem("checklistData", JSON.stringify(saveData));
+    }
+
+    function resetChecks(type){
+      document.querySelectorAll("#"+type.toLowerCase()+"List input[type=checkbox]").forEach(cb=>{
+        cb.checked=false; cb.parentNode.classList.remove("strike");
+        const ts=document.getElementById(cb.id+"ts");
+        if(ts) ts.textContent="";
+        markCheck(cb.id);
+      });
+    }
+
+    function resetSingle(id){
+      const cb=document.getElementById(id);
+      if(cb){ 
+        cb.checked=false; cb.parentNode.classList.remove("strike");
+        const ts=document.getElementById(id+"ts");
+        if(ts) ts.textContent="";
+        markCheck(id);
+      }
+    }
+
+    function restoreChecks(){
+      const saveData=JSON.parse(localStorage.getItem("checklistData")||"{}");
+      Object.keys(saveData).forEach(id=>{
+        const entry=saveData[id];
+        const cb=document.getElementById(id);
+        const ts=document.getElementById(id+"ts");
+        if(cb){
+          cb.checked=entry.checked;
+          if(entry.checked) cb.parentNode.classList.add("strike");
+          if(ts) ts.textContent=entry.timestamp||"";
+        } else {
+          delete saveData[id];
+        }
+      });
+      localStorage.setItem("checklistData", JSON.stringify(saveData));
+    }
+
+    function resetAllData(){
+      if(confirm("⚠️ Are you sure? All saved data will be deleted.")){
+        localStorage.removeItem("checklistData");
+        document.querySelectorAll("input[type=checkbox]").forEach(cb=>{
+          cb.checked=false;
+          cb.parentNode.classList.remove("strike");
+          const ts=document.getElementById(cb.id+"ts");
+          if(ts) ts.textContent="";
+        });
+        alert("All saved data has been cleared.");
+      }
+    }
+  </script>
+</body>
+</html>
