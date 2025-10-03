@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PBO Pokemon Tool</title>
   <style>
@@ -18,9 +18,9 @@
       padding: 10px;
     }
     button {
-      padding: 8px 16px;
+      padding: 10px 18px;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
       margin: 5px;
     }
@@ -80,6 +80,10 @@
       background: #333;
       color: #f1f1f1;
     }
+    .dark-mode .load-button {
+  background: #f0f0f0 !important; /* hell lassen */
+  color: #000 !important;         /* schwarze Schrift */
+}
   </style>
 </head>
 <body>
@@ -89,7 +93,7 @@
 
   <div id="loading-screen">
     <img src="https://i.imgur.com/XZcfQzw.png" alt="Loading Logo" style="max-width:200px; margin-bottom:20px;">
-    <button id="loadDataBtn">Load Data</button>
+    <button id="loadDataBtn" class="load-button">Load Data</button>
     <p id="loadingText"></p>
   </div>
 
@@ -102,6 +106,14 @@
       <button id="pokemonResetBtn">Reset</button>
       <div id="pokemonResults"></div>
     </div>
+    <script>
+    document.getElementById("pokemonInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault(); // verhindert zufälliges Neuladen der Seite
+        document.getElementById("pokemonSearchBtn").click(); // löst Button-Klick aus
+      }
+    });
+    </script>
 
     <div class="section">
       <h2>Spawn Check</h2>
@@ -185,14 +197,28 @@
       return text.split("\n").map(r => r.split(",").map(c => c.trim()));
     }
 
+    // ---------- OPTIMIZED: parallel loading instead of sequential ----------
     async function loadData() {
-      for (let [region, url] of Object.entries(spawnSheets)) {
-        spawnData[region] = await fetchCSV(url);
-      }
-      chestData = await fetchCSV(chestSheet);
-      megaData = await fetchCSV(megaSheet);
-      pvpData = await fetchCSV(pvpSheet);
+      // create promises for all spawn sheets
+      const spawnPromises = Object.entries(spawnSheets).map(([region, url]) =>
+        fetchCSV(url).then(data => [region, data])
+      );
 
+      // load spawns + other sheets in parallel
+      const [spawnResults, chest, mega, pvp] = await Promise.all([
+        Promise.all(spawnPromises),
+        fetchCSV(chestSheet),
+        fetchCSV(megaSheet),
+        fetchCSV(pvpSheet)
+      ]);
+
+      // store results
+      spawnResults.forEach(([region, data]) => spawnData[region] = data);
+      chestData = chest;
+      megaData = mega;
+      pvpData = pvp;
+
+      // populate region select (same order as spawnSheets)
       const regionSelect = document.getElementById("regionSelect");
       Object.keys(spawnSheets).forEach(region => {
         const opt = document.createElement("option");
@@ -201,6 +227,7 @@
         regionSelect.appendChild(opt);
       });
 
+      // populate chest select
       const chestSelect = document.getElementById("chestSelect");
       [...new Set(chestData.slice(1).map(r => r[0]))].forEach(type => {
         const opt = document.createElement("option");
@@ -209,6 +236,7 @@
         chestSelect.appendChild(opt);
       });
 
+      // populate mega select
       const megaSelect = document.getElementById("megaSelect");
       [...new Set(megaData.slice(1).map(r => r[0]))].forEach(stone => {
         const opt = document.createElement("option");
@@ -217,6 +245,7 @@
         megaSelect.appendChild(opt);
       });
     }
+    // ---------------------------------------------------------------------
 
     function renderTable(headers, rows) {
       if (!rows.length) return "<p>No results found.</p>";
@@ -260,7 +289,7 @@
       }
 
       // Chest sheet
-      const chestRows = chestData.slice(1).filter(r => r[2] && r[2].toLowerCase() === query);
+      const chestRows = chestData.slice(1).filter(r => r[2] && r[2].toLowerCase().includes(query));
       if (chestRows.length) {
         results.push({ region: "Chests", headers: chestData[0], rows: chestRows });
       }
@@ -360,6 +389,13 @@
       const container = document.getElementById("pvpResults");
       container.innerHTML = rows.length ? renderTable(headers, rows) : "<p>Currently not listed...</p>";
     });
+    // PvP Check per Enter
+    document.getElementById("pvpInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+      e.preventDefault(); 
+      document.getElementById("pvpSearchBtn").click();
+      }
+    });
 
     document.getElementById("pvpResetBtn").addEventListener("click", () => {
       document.getElementById("pvpInput").value = "";
@@ -368,4 +404,3 @@
   </script>
 </body>
 </html>
-
