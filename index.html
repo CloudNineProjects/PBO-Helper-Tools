@@ -13,13 +13,14 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    background: #1A232C; /* Schwarzer Hintergrund */
-    color: #fff; /* Weiße Schrift */
+    background: #1A232C;
+    color: #fff;
     text-align: center;
   }
   img.logo {
     max-width: 220px;
     margin-bottom: 20px;
+    border-radius: 50%;
   }
   h1 {
     font-size: 2rem;
@@ -28,11 +29,17 @@
   h2 {
     font-size: 1.3rem;
     margin: 0 0 20px 0;
-    color: #bbb; /* leicht abgesetzte Farbe */
+    color: #bbb;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 220px);
+    grid-gap: 12px 30px;
+    justify-content: center;
+    margin-bottom: 20px;
   }
   .btn {
     display: block;
-    margin: 10px 0;
     padding: 14px 22px;
     background: #035F02;
     color: #fff;
@@ -40,20 +47,42 @@
     border-radius: 8px;
     font-size: 1.1rem;
     transition: background 0.2s;
-    width: 220px;
   }
   .btn:hover {
+    background: #095bb0;
+  }
+  .vs-btn {
+    margin-top: 15px;
+    padding: 14px 22px;
+    background: #035F02;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .vs-btn:hover {
     background: #095bb0;
   }
 </style>
 </head>
 <body>
-  <img class="logo" src="https://i.imgur.com/32WkKU8.png" alt="CloudNine Logo"/>
+  <img class="logo" src="https://i.imgur.com/gty2tQr.png" alt="CloudNine Logo"/>
   <h1>CloudNine Project</h1>
   <h2>PBO Tools Hub</h2>
-  <a class="btn" href="tool1/">Open PBO Pokemon Tool</a>
-  <a class="btn" href="tool2/">Open PBO Utility Tool</a>
-  <a class="btn" href="tool3/">Open PBO FAQ</a>
-  <a class="btn" href="tool4/">Open PBO Team Database</a>
+
+  <div class="grid">
+    <a class="btn" href="tool1/">🔧 Toolbox A</a>
+    <a class="btn" href="tool3/">❓ FAQ</a>
+    <a class="btn" href="tool2/">🔧 Toolbox B</a>
+    <a class="btn" href="tool4/">⚔️ Team Database</a>
+    <a class="btn" href="tool6/">📝 Activity Check</a>
+    <a class="btn" href="tool5/">🗺️ Route Planner</a>
+  </div>
+
+  <!-- Neuer Button für Tool 7 -->
+  <a class="vs-btn" href="tool7/" target="_blank">⏰ VS Seeker Reminder</a>
 </body>
 </html>
