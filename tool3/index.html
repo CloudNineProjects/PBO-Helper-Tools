@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -11,13 +12,13 @@
   :root{
     --bg-light:#666769;
     --bg-dark:#1A252C;
-    --card-light:#026503;
+    --card-light:#02491D;
     --card-dark:#023804;
-    --title-color:#ffffff;
+    --title-color:#F0F0F0;
   }
   html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif}
-  body{background:var(--bg-light);color:#fff}
-  body.dark{background:var(--bg-dark);color:#fff}
+  body{background:var(--bg-light);color:#F0F0F0}
+  body.dark{background:var(--bg-dark);color:#F0F0F0}
 
   /* toggle top-right */
   .mode-toggle{
@@ -34,7 +35,7 @@
     user-select:none;
     font-size:14px;
   }
-  body.dark .mode-toggle{background:rgba(0,0,0,0.7);color:#fff}
+  body.dark .mode-toggle{background:rgba(0,0,0,0.7);color:#F0F0F0}
 
   /* loading screen */
   .loader{
@@ -65,12 +66,12 @@
     border-radius:12px;
     padding:18px;
     background:var(--card-light);
-    color:#fff;
+    color:#F0F0F0;
     box-shadow:0 10px 30px rgba(0,0,0,0.08)
   }
   body.dark .card{background:var(--card-dark)}
   h1{margin:0 0 12px;color:var(--title-color);font-size:20px}
-  label{display:block;font-size:0.95rem;margin-top:10px;margin-bottom:6px;color:#fff}
+  label{display:block;font-size:0.95rem;margin-top:10px;margin-bottom:6px;color:#F0F0F0}
   select,button,input[type="text"]{
     width:100%;
     box-sizing:border-box;
@@ -80,8 +81,8 @@
     font-size:15px;
     margin-bottom:10px
   }
-  select{background:#fff;color:#000}
-  body.dark select{background:#000;color:#fff;border:1px solid rgba(255,255,255,0.06)}
+  select{background:#F0F0F0;color:#000}
+  body.dark select{background:#000;color:#F0F0F0;border:1px solid rgba(255,255,255,0.06)}
   .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .controls button{width:auto;padding:10px 14px;border-radius:8px}
   .results{margin-top:12px;background:rgba(255,255,255,0.06);padding:12px;border-radius:8px}
@@ -113,8 +114,8 @@
     <label for="subtypeSelect">Subtype</label>
     <select id="subtypeSelect" disabled><option value="">-- choose subtype --</option></select>
     <div class="controls" style="margin-top:8px">
-      <button id="showBtn" style="background:#fff;color:#111">Show</button>
-      <button id="resetBtn" style="background:#fff;color:#111">Reset</button>
+      <button id="showBtn" style="background:#F0F0F0;color:#111">Show</button>
+      <button id="resetBtn" style="background:#F0F0F0;color:#111">Reset</button>
     </div>
     <div id="out" class="results" style="display:none"></div>
   </div>
