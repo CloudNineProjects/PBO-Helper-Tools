@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Dynamax Helper</title>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+<style>
+  :root{
+    --bg-light:#666769;
+    --bg-dark:#1A252C;
+    --card-light:#02491D;
+    --card-dark:#023804;
+    --button-bg:#F0F0F0;
+    --toggle-light:#F0F0F0;
+    --toggle-dark:#333333;
+    --text-light:#0A0A0A;
+    --text-dark:#F5F5F5;
+    --glass:rgba(255,255,255,0.04);
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    font-family:Inter,system-ui,Arial,sans-serif;
+    transition:background .25s,color .25s;
+  }
+
+  body{
+    background:var(--bg-light);
+    color:var(--text-dark);
+  }
+  body.dark{
+    background:var(--bg-dark);
+    color:var(--text-dark);
+  }
+
+  /* toggle button */
+  .mode-toggle{
+    position:fixed;
+    top:14px;
+    right:14px;
+    z-index:1200;
+    background:var(--toggle-light);
+    color:#000;
+    padding:8px 14px;
+    border-radius:10px;
+    cursor:pointer;
+    box-shadow:0 6px 16px rgba(0,0,0,0.15);
+    user-select:none;
+    font-size:14px;
+  }
+  body.dark .mode-toggle{
+    background:var(--toggle-dark);
+    color:#F0F0F0;
+  }
+
+  /* loading */
+  .loader{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:20px;
+    text-align:center;
+  }
+  .loader img.logo{
+    width:200px;
+    height:200px;
+    border-radius:50%;
+    object-fit:cover;
+    border:none;
+    box-shadow:none;
+  }
+  .load-btn{
+    display:inline-block;
+    min-width:160px;
+    padding:10px 18px;
+    border-radius:8px;
+    border:none;
+    background:var(--button-bg);
+    color:#000;
+    font-size:16px;
+    cursor:pointer;
+  }
+  .load-btn[disabled]{opacity:0.6;cursor:default;}
+  .loading-text{font-size:14px;color:#F0F0F0;}
+
+  /* layout */
+  .wrap{
+    max-width:980px;
+    margin:24px auto;
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+
+  .card{
+    border-radius:14px;
+    padding:18px;
+    background:var(--card-light);
+    color:#F0F0F0;
+    box-shadow:0 10px 30px rgba(0,0,0,0.12);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  body.dark .card{ background:var(--card-dark); }
+  .card:hover{ transform:translateY(-3px); }
+
+  h1{margin:0 0 12px;font-size:20px}
+  label{display:block;margin:10px 0 6px;font-weight:600;color:#F0F0F0}
+
+  select{
+    width:100%;
+    padding:10px 12px;
+    border-radius:8px;
+    border:none;
+    font-size:15px;
+    background:#F0F0F0;
+    color:#000;
+    box-sizing:border-box;
+  }
+  body.dark select{background:#000;color:#F0F0F0;}
+
+  .controls{
+    margin-top:10px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .controls button{
+    padding:10px 14px;
+    border-radius:8px;
+    border:none;
+    background:var(--button-bg);
+    color:#000;
+    cursor:pointer;
+  }
+
+  .results{
+    margin-top:12px;
+    padding:12px;
+    border-radius:10px;
+    background:var(--glass);
+    color:inherit;
+  }
+  pre.preserve{white-space:pre-wrap;margin:0;font-family:inherit}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.06)}
+  th{position:sticky;top:0;background:rgba(0,0,0,0.1);z-index:2;font-weight:700}
+  .badge{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.15);margin:4px 6px 4px 0;font-size:13px}
+  .badge.highlight {
+  background: #ff4444; /* oder z.B. #00c853 für grün */
+  color: #fff;
+  font-weight: 700;
+  }
+  .cell-strong{background:#b42c2c;color:#F0F0F0;font-weight:700}
+  .cell-resist{background:#206699;color:#F0F0F0}
+  .cell-immune{background:#444;color:#F0F0F0}
+  .cell-normal{background:transparent;color:inherit}
+  .cell-other{background:rgba(255,255,255,0.03)}
+</style>
+</head>
+<body>
+<div id="modeToggle" class="mode-toggle">🌙 Dark Mode</div>
+
+<!-- Loading -->
+<div id="loading" class="loader">
+  <img class="logo" src="https://i.imgur.com/XZcfQzw.png" alt="Dynamax logo">
+  <button id="loadBtn" class="load-btn">Load Data</button>
+  <div id="loadingText" class="loading-text" style="display:none">Loading...</div>
+</div>
+
+<!-- App -->
+<div id="app" class="wrap" style="display:none;">
+  <div class="card" id="card-info">
+    <h1>Dynamax Info</h1>
+    <label for="infoFilter">Filter</label>
+    <select id="infoFilter"><option value="">-- select --</option></select>
+    <div class="controls">
+      <button id="infoShow">Show</button>
+      <button id="infoReset">Reset</button>
+    </div>
+    <div id="infoOut" class="results" style="display:none"></div>
+  </div>
+
+  <div class="card" id="card-db">
+    <h1>Dynamax Database</h1>
+    <label for="dbFilter">Filter</label>
+    <select id="dbFilter"><option value="">-- select --</option></select>
+    <div class="controls">
+      <button id="dbShow">Show</button>
+      <button id="dbReset">Reset</button>
+    </div>
+    <div id="dbOut" class="results" style="display:none"></div>
+  </div>
+
+  <div class="card" id="card-attack">
+    <h1>Attack Check</h1>
+    <label for="atkDef1">Defender Type 1</label>
+    <select id="atkDef1"><option value="">-- select --</option></select>
+    <label for="atkDef2">Defender Type 2 (optional)</label>
+    <select id="atkDef2"><option value="">-- select --</option></select>
+    <div class="controls">
+      <button id="atkShow">Show</button>
+      <button id="atkReset">Reset</button>
+    </div>
+    <div id="atkOut" class="results" style="display:none"></div>
+    <hr style="margin:16px 0;border:none;border-top:1px solid rgba(255,255,255,0.1)">
+    <h1>Defense Check</h1>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+      <select id="def1"><option value="">-- Move 1 --</option></select>
+      <select id="def2"><option value="">-- Move 2 --</option></select>
+      <select id="def3"><option value="">-- Move 3 --</option></select>
+      <select id="def4"><option value="">-- Move 4 --</option></select>
+    </div>
+    <div class="controls" style="margin-top:8px">
+      <button id="defShow">Show</button>
+      <button id="defReset">Reset</button>
+    </div>
+    <div id="defOut" class="results" style="display:none;overflow-y:auto;max-height:420px"></div>
+  </div>
+
+  <div class="card" id="card-move">
+    <h1>Dynamax Move</h1>
+    <label for="moveFilter">Filter (Column A)</label>
+    <select id="moveFilter"><option value="">-- select --</option></select>
+    <div class="controls">
+      <button id="moveShow">Show</button>
+      <button id="moveReset">Reset</button>
+    </div>
+    <div id="moveOut" class="results" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+/* helper + functionality (unchanged) */
+const $=id=>document.getElementById(id);
+const escapeHtml=s=>s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function normalizeValue(v){if(v==null)return'';const s=String(v).trim();if(!s)return'';if(/^(2|2\.0)$/i.test(s))return'2';if(/^(1|1\.0)$/i.test(s))return'1';if(/^(0\.5|½|1\/2)$/i.test(s))return'0.5';if(/^(0|0\.0|immune|x0)$/i.test(s.toLowerCase()))return'0';return s;}
+function valueClass(v){const n=normalizeValue(v);if(n==='2')return'cell-strong';if(n==='1')return'cell-normal';if(n==='0.5')return'cell-resist';if(n==='0')return'cell-immune';return'cell-other';}
+const URL_INFO="https://docs.google.com/spreadsheets/d/e/2PACX-1vRKBJf3BXL7kqLIu8WAZCiFIBqNTMVvWCmkRA2kVoC30QskuIRkxwUKJJnrHKh2Y8I18iZ0p068wRD2/pub?output=csv";
+const URL_DB="https://docs.google.com/spreadsheets/d/e/2PACX-1vRGq_ta_VKuhpNif51aoWSm2XKE04CHREcDqGObDZnBQ0kK3Yo-_Bz7i7u1oP1Xv9pRm0-xN7dDgyiT/pub?output=csv";
+const URL_MOVE="https://docs.google.com/spreadsheets/d/e/2PACX-1vRfBHLwHVULXabVXPztSXOz-36oGnjJFxuHyhgftVYg3Ft_f7VqkVwfpdmQwrfZEXrdjCKnydJBqRHt/pub?output=csv";
+const URL_ATTACK="https://docs.google.com/spreadsheets/d/e/2PACX-1vQUYm_GBIYmou5lzjHIeXmz9GlP0d4_z3g6Jxrpof_DvIBFdOh8bL4dNF8v4T2Vn5sseu8zOhRzP74O/pub?output=csv";
+let infoRows=[],infoFields=[],dbRows=[],dbFields=[],moveRows=[],moveFields=[],atkRows=[],atkFields=[];
+function parseCSV(url){return new Promise((res,rej)=>Papa.parse(url,{download:true,header:true,skipEmptyLines:true,complete:r=>res({fields:r.meta.fields||[],data:r.data}),error:e=>rej(e)}));}
+function showLoading(t){$('loadingText').style.display='block';$('loadingText').textContent=t||'Loading...';}
+function hideLoading(){$('loadingText').style.display='none';}
+function uniqueFromColumn(rows,col){const s=new Set();rows.forEach(r=>{const v=(r[col]||'').trim();if(v)s.add(v)});return[...s].sort((a,b)=>a.localeCompare(b,'en'));}
+function populateSelect(sel,arr,ph){sel.innerHTML='';const o=document.createElement('option');o.value='';o.textContent=ph||'-- select --';sel.appendChild(o);arr.forEach(v=>{const op=document.createElement('option');op.value=v;op.textContent=v;sel.appendChild(op);});}
+function renderPre(s){return`<pre class="preserve">${escapeHtml(s||'')}</pre>`;}
+function renderTable(rows,fields,cols){let h='<div style="overflow:auto"><table><thead><tr>';cols.forEach(c=>h+=`<th>${escapeHtml(c)}</th>`);h+='</tr></thead><tbody>';rows.forEach(r=>{h+='<tr>';cols.forEach(c=>{const raw=r[c]||'';const cls=valueClass(raw);const content=(typeof raw==='string'&&raw.includes('\n'))?`<pre class="preserve" style="margin:0">${escapeHtml(raw)}</pre>`:escapeHtml(raw);h+=`<td class="${cls}">${content}</td>`});h+='</tr>';});h+='</tbody></table></div>';return h;}
+function loadAll(){$('loadBtn').disabled=true;showLoading('Loading...');Promise.all([parseCSV(URL_INFO).then(r=>{infoFields=r.fields;infoRows=r.data;}),parseCSV(URL_DB).then(r=>{dbFields=r.fields;dbRows=r.data;}),parseCSV(URL_MOVE).then(r=>{moveFields=r.fields;moveRows=r.data;}),parseCSV(URL_ATTACK).then(r=>{atkFields=r.fields;atkRows=r.data;})]).then(()=>{hideLoading();$('loading').style.display='none';$('app').style.display='flex';populate();}).catch(e=>{$('loadingText').textContent='Error';console.error(e);$('loadBtn').disabled=false;});}
+function populate(){const infoA=infoFields[0];populateSelect($('infoFilter'),uniqueFromColumn(infoRows,infoA),'-- select --');const dbA=dbFields[0];populateSelect($('dbFilter'),uniqueFromColumn(dbRows,dbA),'-- select --');const moveA=moveFields[0];populateSelect($('moveFilter'),uniqueFromColumn(moveRows,moveA),'-- select --');const defenders=atkFields.slice(1);populateSelect($('atkDef1'),defenders,'-- Defender --');populateSelect($('atkDef2'),defenders,'-- Defender (opt.) --');const rowLabel=atkFields[0];const moveNames=uniqueFromColumn(atkRows,rowLabel);['def1','def2','def3','def4'].forEach(id=>populateSelect($(id),moveNames,'-- Move --'));}
+
+/* Cards functionality unchanged */
+$('infoShow').onclick=()=>{const sel=$('infoFilter').value;if(!sel)return alert('Select');const colA=infoFields[0],colB=infoFields[1];const m=infoRows.filter(r=>(r[colA]||'').trim()===sel);$('infoOut').innerHTML=m.map(x=>renderPre(x[colB]||'')).join('');$('infoOut').style.display='block';};
+$('infoReset').onclick=()=>{$('infoFilter').selectedIndex=0;$('infoOut').style.display='none';};
+$('dbShow').onclick=()=>{const sel=$('dbFilter').value;if(!sel)return alert('Select');const colA=dbFields[0];const m=dbRows.filter(r=>(r[colA]||'').trim()===sel);$('dbOut').innerHTML=renderTable(m,dbFields,dbFields.slice(1,7));$('dbOut').style.display='block';};
+$('dbReset').onclick=()=>{$('dbFilter').selectedIndex=0;$('dbOut').style.display='none';};
+$('atkShow').onclick = () => {
+  const s1 = $('atkDef1').value, s2 = $('atkDef2').value;
+  if (!s1 && !s2) return alert('Select at least one defender');
+  
+  const sel = [s1, s2].filter(Boolean);
+  const rowLabel = atkFields[0];
+  const out = [];
+
+  atkRows.forEach(r => {
+    const vals = sel.map(c => normalizeValue(r[c] || ''));
+
+    if (sel.length === 1) {
+      if (vals[0] === '2') {
+        out.push({ name: r[rowLabel], highlight: false });
+      }
+    } else {
+      const has2 = vals.includes('2');
+      const count2 = vals.filter(v => v === '2').length;
+      const has1 = vals.includes('1');
+      if (has2 && (has1 || count2 >= 2)) {
+        // highlight only if both are 2
+        const highlight = (count2 >= 2);
+        out.push({ name: r[rowLabel], highlight });
+      }
+    }
+  });
+
+  $('atkOut').innerHTML = out.length
+    ? out.map(x =>
+        `<span class="badge${x.highlight ? ' highlight' : ''}">${escapeHtml(x.name)}</span>`
+      ).join(' ')
+    : '<p>No results.</p>';
+
+  $('atkOut').style.display = 'block';
+};
+$('atkReset').onclick=()=>{$('atkDef1').selectedIndex=0;$('atkDef2').selectedIndex=0;$('atkOut').style.display='none';};
+$('defShow').onclick=()=>{const c=['def1','def2','def3','def4'].map(id=>$(id).value).filter(Boolean);if(!c.length)return alert('Select');const rowLabel=atkFields[0];const m=atkRows.filter(r=>c.includes((r[rowLabel]||'').trim()));$('defOut').innerHTML=renderTable(m,atkFields,atkFields.slice(0,19));$('defOut').style.display='block';};
+$('defReset').onclick=()=>{['def1','def2','def3','def4'].forEach(id=>$(id).selectedIndex=0);$('defOut').style.display='none';};
+$('moveShow').onclick=()=>{const sel=$('moveFilter').value;if(!sel)return alert('Select');const colA=moveFields[0],colB=moveFields[1];const m=moveRows.filter(r=>(r[colA]||'').trim()===sel);$('moveOut').innerHTML=m.map(x=>renderPre(x[colB]||'')).join('');$('moveOut').style.display='block';};
+$('moveReset').onclick=()=>{$('moveFilter').selectedIndex=0;$('moveOut').style.display='none';};
+const modeToggle=$('modeToggle');function updateModeLabel(){modeToggle.textContent=document.body.classList.contains('dark')?'☀️ Light Mode':'🌙 Dark Mode';}
+modeToggle.onclick=()=>{document.body.classList.toggle('dark');updateModeLabel();};
+updateModeLabel();
+$('loadBtn').onclick=loadAll;
+</script>
+</body>
+</html>
