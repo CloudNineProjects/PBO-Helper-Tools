@@ -1,229 +1,312 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>PBO Checklist</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-body { 
-  font-family: Arial, sans-serif; 
-  margin:0; 
-  background:#666769; 
-  color:#fff; 
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBO Halloween Map and Spawns</title>
+<style>
+:root {
+  --bg-light: #666769;
+  --bg-dark: #1A252C;
+  --card-light: #02491D;
+  --card-dark: #023804;
+  --text-light: #000;
+  --text-dark: #F0F0F0;
+  --btn-bg: #F0F0F0;
+  --btn-text: #000;
 }
-.dark-mode { background:#1A252C; color:#fff; }
-.card { background:#026503; padding:20px; margin:20px; border-radius:10px; }
-.dark-mode .card { background:#023804; }
-button { 
-  margin-top:10px; 
-  padding:10px 18px; 
-  border:none; 
-  border-radius:8px; 
-  cursor:pointer; 
-  font-size: 1rem; 
+body {
+  font-family: Arial, sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-light);
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.3s, color 0.3s;
 }
-.reset-btn { background:#f0f0f0; color:#000; }
-.dark-mode .reset-btn { background:#444; color:#fff; }
-.strike { text-decoration: line-through; opacity:0.6; }
+.dark-mode {
+  background-color: var(--bg-dark);
+  color: var(--text-dark);
+}
+.container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+}
+.card {
+  background-color: var(--card-light);
+  color: white;
+  border-radius: 12px;
+  padding: 15px 20px;
+  margin-bottom: 20px;
+  transition: background-color 0.3s;
+}
+.dark-mode .card {
+  background-color: var(--card-dark);
+}
+h1 {
+  text-align: center;
+  color: white;
+  margin-bottom: 20px;
+}
+button, select {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-right: 10px;
+  margin-top: 5px;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+}
+.dark-mode button, .dark-mode select {
+  background: #000;
+  color: white;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  background: white;
+  color: black;
+  border-radius: 8px;
+  overflow: hidden;
+}
+table th, table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+.dark-mode table {
+  background: #111;
+  color: white;
+}
+img.map {
+  display: block;
+  margin: 20px auto;
+  width: 80%;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+img.map:hover {
+  transform: scale(1.02);
+}
 
-.loader { 
-  display:flex; 
-  flex-direction:column; 
-  justify-content:center; 
-  align-items:center; 
-  height:100vh; 
+/* Overlay */
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  overflow: hidden;
 }
-.loader img { 
-  width:220px; 
-  max-width:80%;     /* passt sich kleineren Screens an */
-  height:auto;       /* keine Verzerrung */
-  object-fit:cover; 
-  border-radius:50%; 
+#overlay img {
+  width: 2500px;
+  height: 1500px;
+  display: block;
+  cursor: grab;
+  user-select: none;
+}
+#closeOverlay {
+  position: fixed;
+  top: 20px;
+  right: 35px;
+  font-size: 32px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  z-index: 1001;
+}
+#closeOverlay:hover {
+  color: #ff5050;
 }
 
-@media (max-width:600px) { 
-  .loader img { 
-    width:160px; 
-    height:160px;   /* quadratisch, rund bleibt rund */
-  }
-  body { font-size:16px; }
+/* Toggle */
+.toggle-container {
+  position: fixed;
+  top: 15px;
+  right: 20px;
+  z-index: 2000;
 }
-    /* Toggle top right */
-    #toggleMode {
-      position: fixed;
-      top: 15px;
-      right: 15px;
-      padding: 6px 10px;
-      border-radius: 6px;
-      background: #f0f0f0;
-      color: #000;
-      z-index: 1001;
-    }
-    .dark-mode #toggleMode {
-      background: #444;
-      color: #fff;
-    }
-
-    /* Cards pushed down so toggle looks independent */
-    #content {
-      display:none;
-      position:relative;
-      padding-top: 70px;
-    }
-  </style>
+.toggle-btn {
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 15px;
+  cursor: pointer;
+}
+.dark-mode .toggle-btn {
+  background-color: #000;
+  color: white;
+}
+.footer {
+  text-align: center;
+  color: white;
+  margin-top: 20px;
+}
+</style>
 </head>
 <body>
-  <!-- Dark/Light toggle -->
-  <button id="toggleMode">🌙 Dark Mode</button>
 
-  <div id="loader" class="loader">
-    <img src="https://i.imgur.com/XZcfQzw.png" alt="logo">
-    <button id="loadBtn">Load Data</button>
-    <p id="loadingText" style="display:none;">Loading...</p>
+<div class="toggle-container">
+  <button id="toggleMode" class="toggle-btn">🌙 Dark Mode</button>
+</div>
+
+<div class="container">
+  <h1>PBO Halloween Map and Spawns</h1>
+
+  <div class="card">
+    <h2>Filter by Location</h2>
+    <select id="locationSelect">
+      <option value="">Select Location</option>
+    </select>
+    <button id="resetLocation">Reset</button>
+    <div id="locationResult"></div>
   </div>
 
-  <div id="content">
-     <div id="daily" class="card">
-      <h2>Daily</h2>
-      <div id="dailyList"></div>
-      <button class="reset-btn" onclick="resetChecks('Daily')">Reset Dailies</button>
-    </div>
-    <div id="weekly" class="card alt">
-      <h2>Weekly</h2>
-      <div id="weeklyList"></div>
-      <button class="reset-btn" onclick="resetChecks('Weekly')">Reset Weeklies</button>
-    </div>
-    <div id="others" class="card">
-      <h2>Others</h2>
-      <div id="othersList"></div>
-    </div>
-
-    <!-- Settings -->
-    <div class="card">
-      <h2>Settings</h2>
-      <button class="reset-btn" onclick="resetAllData()">Reset All Data</button>
-      <p style="font-size:0.9em;opacity:0.8;">⚠️ Clears all saved checks and timestamps.</p>
-    </div>
+  <div class="card">
+    <h2>Filter by Pokemon</h2>
+    <select id="pokemonSelect">
+      <option value="">Select Pokemon</option>
+    </select>
+    <button id="resetPokemon">Reset</button>
+    <div id="pokemonResult"></div>
   </div>
 
-  <!-- PapaParse -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <div class="card" style="text-align:center;">
+    <h2>Event Map</h2>
+    <img src="https://i.imgur.com/EyUirUa.png" alt="Event Map" class="map" id="mapImage">
+  </div>
 
-  <script>
-    let dark=false;
-    function toggleMode(){
-      dark=!dark;
-      document.body.classList.toggle("dark-mode",dark);
-      const btn=document.getElementById("toggleMode");
-      btn.textContent=dark?"☀️ Light Mode":"🌙 Dark Mode";
-    }
-    document.getElementById("toggleMode").onclick=toggleMode;
+  <div class="footer">@CloudNine</div>
+</div>
 
-    // Load on button click
-    document.getElementById("loadBtn").onclick=()=>{
-      const loadBtn=document.getElementById("loadBtn");
-      const loadingText=document.getElementById("loadingText");
-      loadBtn.disabled=true;
-      loadingText.style.display="block";
-      loadingText.textContent="Loading...";
+<div id="overlay">
+  <span id="closeOverlay">&times;</span>
+  <img src="https://i.imgur.com/EyUirUa.png" alt="Full Map" id="overlayMap">
+</div>
 
-      Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vSnQAomUZRPHbub-G3CwuUY9iByOE8Q1KHhat_xUIx3bUSo2TfG3DEkET3dumTbSKUMzDlCr3qo0BeN/pub?output=csv", {
-        download:true,
-        header:true,
-        skipEmptyLines:true,
-        complete: function(results) {
-          const data = results.data;
-          let daily="", weekly="", others="";
-          data.forEach((r,i)=>{
-            if(!r.Activity) return;
-            const id="chk"+i;
-            const group=(r.Time||"").trim();
-            const item=`<label><input type="checkbox" id="${id}" onchange="markCheck('${id}')">
-              ${r.Activity} - ${r.Location||""} - ${r.Content||""} (${r.Time||""})
-              <span id="${id}ts"></span></label><br>`;
-            if(group==="Daily") daily+=item;
-            else if(group==="Weekly") weekly+=item;
-            else others+=item+`<button class="reset-btn" onclick="resetSingle('${id}')">Reset</button><br>`;
-          });
+<script>
+const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQuUm2mMu9Z1cGLJpXoIK09t39JVFCiAJBRCwRIaGw6gPWQ9_JmyUPQObmZyKYrugeD82Hgz4_wbrsa/pub?output=csv";
+let data = [];
 
-          document.getElementById("dailyList").innerHTML=daily;
-          document.getElementById("weeklyList").innerHTML=weekly;
-          document.getElementById("othersList").innerHTML=others;
-          document.getElementById("loader").style.display="none";
-          document.getElementById("content").style.display="block";
+// Dark Mode toggle
+const toggleBtn = document.getElementById("toggleMode");
+toggleBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark-mode");
+  toggleBtn.textContent = document.body.classList.contains("dark-mode") ? "☀️ Light Mode" : "🌙 Dark Mode";
+});
 
-          restoreChecks();
-        }
-      });
-    };
+// Load CSV
+fetch(sheetUrl)
+  .then(res => res.text())
+  .then(txt => {
+    const rows = txt.split("\n").map(r => r.split(","));
+    rows.shift();
+    data = rows.map(r => ({ A: r[0]?.trim(), B: r[1]?.trim() }));
+    populateSelectors();
+  });
 
-    // Save & restore checks
-    function markCheck(id){
-      const cb=document.getElementById(id);
-      const ts=document.getElementById(id+"ts");
-      const checked=cb.checked;
+function populateSelectors() {
+  const locSet = [...new Set(data.map(r => r.A))];
+  const pokSet = [...new Set(data.map(r => r.B))];
+  const locSelect = document.getElementById("locationSelect");
+  const pokSelect = document.getElementById("pokemonSelect");
+  locSet.forEach(l => locSelect.add(new Option(l, l)));
+  pokSet.forEach(p => pokSelect.add(new Option(p, p)));
+}
 
-      if(checked){
-        cb.parentNode.classList.add("strike");
-        ts.textContent=" ("+new Date().toLocaleString()+")";
-      } else {
-        cb.parentNode.classList.remove("strike");
-        ts.textContent="";
-      }
+function displayTable(rows, targetId) {
+  if (!rows.length) return;
+  let html = "<table><tr><th>Location</th><th>Pokemon</th></tr>";
+  rows.forEach(r => { html += `<tr><td>${r.A}</td><td>${r.B}</td></tr>`; });
+  html += "</table>";
+  document.getElementById(targetId).innerHTML = html;
+}
 
-      const saveData=JSON.parse(localStorage.getItem("checklistData")||"{}");
-      saveData[id]={ checked, timestamp: ts.textContent };
-      localStorage.setItem("checklistData", JSON.stringify(saveData));
-    }
+document.getElementById("locationSelect").addEventListener("change", e => {
+  const val = e.target.value;
+  const filtered = data.filter(r => r.A === val);
+  displayTable(filtered, "locationResult");
+});
+document.getElementById("pokemonSelect").addEventListener("change", e => {
+  const val = e.target.value;
+  const filtered = data.filter(r => r.B === val);
+  displayTable(filtered, "pokemonResult");
+});
+document.getElementById("resetLocation").onclick = () => {
+  document.getElementById("locationSelect").value = "";
+  document.getElementById("locationResult").innerHTML = "";
+};
+document.getElementById("resetPokemon").onclick = () => {
+  document.getElementById("pokemonSelect").value = "";
+  document.getElementById("pokemonResult").innerHTML = "";
+};
 
-    function resetChecks(type){
-      document.querySelectorAll("#"+type.toLowerCase()+"List input[type=checkbox]").forEach(cb=>{
-        cb.checked=false; cb.parentNode.classList.remove("strike");
-        const ts=document.getElementById(cb.id+"ts");
-        if(ts) ts.textContent="";
-        markCheck(cb.id);
-      });
-    }
+// Overlay logic
+const overlay = document.getElementById("overlay");
+const overlayImg = document.getElementById("overlayMap");
+const closeBtn = document.getElementById("closeOverlay");
+const mapImg = document.getElementById("mapImage");
 
-    function resetSingle(id){
-      const cb=document.getElementById(id);
-      if(cb){ 
-        cb.checked=false; cb.parentNode.classList.remove("strike");
-        const ts=document.getElementById(id+"ts");
-        if(ts) ts.textContent="";
-        markCheck(id);
-      }
-    }
+mapImg.addEventListener("click", () => overlay.style.display = "flex");
+closeBtn.addEventListener("click", () => overlay.style.display = "none");
+overlay.addEventListener("click", e => { if (e.target === overlay) overlay.style.display = "none"; });
 
-    function restoreChecks(){
-      const saveData=JSON.parse(localStorage.getItem("checklistData")||"{}");
-      Object.keys(saveData).forEach(id=>{
-        const entry=saveData[id];
-        const cb=document.getElementById(id);
-        const ts=document.getElementById(id+"ts");
-        if(cb){
-          cb.checked=entry.checked;
-          if(entry.checked) cb.parentNode.classList.add("strike");
-          if(ts) ts.textContent=entry.timestamp||"";
-        } else {
-          delete saveData[id];
-        }
-      });
-      localStorage.setItem("checklistData", JSON.stringify(saveData));
-    }
+// drag-to-pan logic
+let isDragging = false, startX, startY, scrollX = 0, scrollY = 0;
+let offsetX = 0, offsetY = 0;
 
-    function resetAllData(){
-      if(confirm("⚠️ Are you sure? All saved data will be deleted.")){
-        localStorage.removeItem("checklistData");
-        document.querySelectorAll("input[type=checkbox]").forEach(cb=>{
-          cb.checked=false;
-          cb.parentNode.classList.remove("strike");
-          const ts=document.getElementById(cb.id+"ts");
-          if(ts) ts.textContent="";
-        });
-        alert("All saved data has been cleared.");
-      }
-    }
-  </script>
+function startDrag(e) {
+  e.preventDefault();
+  isDragging = true;
+  overlayImg.style.cursor = "grabbing";
+  startX = e.pageX - offsetX;
+  startY = e.pageY - offsetY;
+}
+
+function onDrag(e) {
+  if (!isDragging) return;
+  e.preventDefault();
+  offsetX = e.pageX - startX;
+  offsetY = e.pageY - startY;
+  overlayImg.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+}
+
+function endDrag() {
+  isDragging = false;
+  overlayImg.style.cursor = "grab";
+}
+
+// Mouse events
+overlayImg.addEventListener("mousedown", startDrag);
+overlayImg.addEventListener("mousemove", onDrag);
+overlayImg.addEventListener("mouseup", endDrag);
+overlayImg.addEventListener("mouseleave", endDrag);
+
+// Touch events
+overlayImg.addEventListener("touchstart", e => {
+  const t = e.touches[0];
+  isDragging = true;
+  startX = t.pageX - offsetX;
+  startY = t.pageY - offsetY;
+}, { passive: true });
+overlayImg.addEventListener("touchmove", e => {
+  if (!isDragging) return;
+  const t = e.touches[0];
+  offsetX = t.pageX - startX;
+  offsetY = t.pageY - startY;
+  overlayImg.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+}, { passive: true });
+overlayImg.addEventListener("touchend", endDrag);
+</script>
 </body>
 </html>
