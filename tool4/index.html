@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -9,198 +8,191 @@
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <style>
-  :root{
-    --bg-light:#666769;
-    --bg-dark:#1A252C;
-    --card-light:#02491D;
-    --card-dark:#023804;
-    --title-color:#ffffff;
-  }
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif}
-  body{background:var(--bg-light);color:#F0F0F0}
-  body.dark{background:var(--bg-dark);color:#F0F0F0}
+:root{
+  --bg-light:#666769;
+  --bg-dark:#1A252C;
+  --card-light:#02491D;
+  --card-dark:#023804;
+  --title-color:#ffffff;
+}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif}
+body{background:var(--bg-light);color:#F0F0F0}
+body.dark{background:var(--bg-dark)}
 
-  /* toggle top-right */
-  .mode-toggle{
-    position:fixed;
-    top:12px;
-    right:12px;
-    z-index:1200;
-    background:rgba(255,255,255,0.9);
-    color:#111;
-    padding:6px 10px;
-    border-radius:8px;
-    cursor:pointer;
-    box-shadow:0 4px 12px rgba(0,0,0,0.15);
-    user-select:none;
-    font-size:14px;
-  }
-  body.dark .mode-toggle{background:rgba(0,0,0,0.7);color:#F0F0F0}
+.mode-toggle{
+  position:fixed;top:12px;right:12px;z-index:1200;
+  background:rgba(255,255,255,0.9);color:#111;
+  padding:6px 10px;border-radius:8px;cursor:pointer;
+}
+body.dark .mode-toggle{background:rgba(0,0,0,0.7);color:#F0F0F0}
 
-  /* loading screen */
-  .loader{
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    gap:14px;
-    text-align:center;
-  }
-  .loader img.logo{width:220px;height:220px;object-fit:cover;border-radius:50%;box-shadow:0 8px 24px rgba(0,0,0,0.25)}
-  .load-btn{
-    padding:10px 18px;
-    border-radius:8px;
-    border:none;
-    background:#F0F0F0;
-    color:#000000;
-    cursor:pointer;
-    font-size:16px;
-    width:auto;
-  }
-  .loading-text{color:rgba(255,255,255,0.85);margin-top:6px;font-size:0.95rem}
+.loader{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:14px;text-align:center;
+}
+.loader img.logo{
+  width:220px;height:220px;object-fit:cover;border-radius:50%;
+  box-shadow:0 8px 24px rgba(0,0,0,0.25)
+}
+.load-btn{
+  padding:10px 18px;border-radius:8px;border:none;
+  background:#F0F0F0;color:#000;cursor:pointer;font-size:16px;width:auto;
+}
+.loading-text{opacity:.85;font-size:.95rem}
 
-  /* app */
-  .wrap{max-width:860px;margin:28px auto;padding:18px}
-  .card{
-    border-radius:12px;
-    padding:18px;
-    background:var(--card-light);
-    color:#F0F0F0;
-    box-shadow:0 10px 30px rgba(0,0,0,0.08)
-  }
-  body.dark .card{background:var(--card-dark)}
-  h1{margin:0 0 12px;color:var(--title-color);font-size:20px}
-  label{display:block;font-size:0.95rem;margin-top:10px;margin-bottom:6px;color:#F0F0F0}
-  select,button{
-    width:100%;
-    box-sizing:border-box;
-    padding:10px 12px;
-    border-radius:8px;
-    border:1px solid rgba(0,0,0,0.1);
-    font-size:15px;
-    margin-bottom:10px
-  }
-  select{background:#F0F0F0;color:#000}
-  body.dark select{background:#000;color:#F0F0F0;border:1px solid rgba(255,255,255,0.06)}
-  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .controls button{width:auto;padding:10px 14px;border-radius:8px}
-  .results{margin-top:12px;background:rgba(255,255,255,0.06);padding:12px;border-radius:8px;color:inherit}
-  pre.comments{white-space:pre-wrap;margin:0;font-family:inherit}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{text-align:left;padding:8px;border-bottom:1px solid rgba(255,255,255,0.06);vertical-align:top}
-  th{background:rgba(0,0,0,0.06)}
-  @media(max-width:560px){
-    .wrap{padding:12px;margin:12px}
-    .loader img.logo{width:180px;height:180px}
-  }
+.wrap{max-width:860px;margin:28px auto;padding:18px}
+.card{
+  border-radius:12px;padding:18px;
+  background:var(--card-light);
+}
+body.dark .card{background:var(--card-dark)}
+
+label{display:block;margin-top:10px;margin-bottom:6px}
+select,button{
+  width:100%;padding:10px;border-radius:8px;font-size:15px;
+}
+select{background:#F0F0F0}
+body.dark select{background:#000;color:#fff}
+
+.controls{display:flex;gap:10px;flex-wrap:wrap}
+.controls button{width:auto}
+
+.results{margin-top:14px;background:rgba(255,255,255,0.06);padding:14px;border-radius:8px}
+
+.section-title{font-weight:600;margin:14px 0 6px}
+.preview-img{
+  max-width:220px;border-radius:8px;cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,0.3)
+}
+
+#imgOverlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.9);
+  display:none;align-items:center;justify-content:center;
+  z-index:2000;
+}
+#imgOverlay img{max-width:90%;max-height:90%}
+#imgOverlay .close{
+  position:absolute;top:20px;right:20px;
+  font-size:28px;cursor:pointer;color:#fff;
+}
+iframe{width:100%;aspect-ratio:16/9;border:none;border-radius:8px}
 </style>
 </head>
+
 <body>
-  <div id="modeToggle" class="mode-toggle">🌙 Dark Mode</div>
+<div id="modeToggle" class="mode-toggle">🌙 Dark Mode</div>
 
-  <!-- Loading screen -->
-  <div id="loading" class="loader" aria-live="polite">
-    <img class="logo" src="https://i.imgur.com/XZcfQzw.png" alt="logo">
-    <button id="loadBtn" class="load-btn">Load Data</button>
-    <div id="loadingText" class="loading-text" style="display:none">Loading...</div>
-  </div>
+<div id="loading" class="loader">
+  <img class="logo" src="https://i.imgur.com/XZcfQzw.png">
+  <button id="loadBtn" class="load-btn">Load Data</button>
+  <div id="loadingText" class="loading-text" style="display:none">Loading…</div>
+</div>
 
-  <!-- App -->
-  <div id="app" class="wrap" style="display:none">
-    <div class="card">
-      
-      <label for="colA">Select Content</label>
-      <select id="colA"><option value="">-- choose --</option></select>
+<div id="app" class="wrap" style="display:none">
+  <div class="card">
+    <label>Content</label>
+    <select id="contentSelect">
+      <option value="">-- choose --</option>
+    </select>
 
-      <div class="controls" style="margin-top:8px">
-        <button id="showBtn" style="background:#F0F0F0;color:#111">Show</button>
-        <button id="resetBtn" style="background:#F0F0F0;color:#111">Reset</button>
-      </div>
+    <label>Team</label>
+    <select id="teamSelect" disabled>
+      <option value="">-- choose --</option>
+    </select>
 
-      <div id="out" class="results" style="display:none"></div>
+    <div class="controls">
+      <button id="showBtn">Show</button>
+      <button id="resetBtn">Reset</button>
     </div>
+
+    <div id="out" class="results" style="display:none"></div>
   </div>
+</div>
+
+<div id="imgOverlay">
+  <span class="close">✕</span>
+  <img id="overlayImg">
+</div>
 
 <script>
-const $ = id => document.getElementById(id);
-const escapeHtml = s => s == null ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTZms-FGa78v8FvI5CqYGTck1d_TU0yzWGc-UVXhoEpcp3W0zF5aPdr5ZGFYc-nfWUkgVUhtEDZCfR/pub?output=csv";
-
-let rows = [];
-let keyA="Content", keyB="Accessibility", keyC="Team Link", keyD="Comments";
+const CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vTQXPCtdQMlebYXnrAn2uTY1o0Qkn9h1tZyOvVk0xPwL2Ig9p3XMGmKDqEfeJjpyQ97e8UrpaTzmnN3/pub?output=csv";
+const $=id=>document.getElementById(id);
+let rows=[];
 
 function loadData(){
-  $('loadBtn').disabled = true;
-  $('loadingText').style.display = 'block';
-  $('loadingText').textContent = 'Loading...';
-  Papa.parse(CSV_URL, {
-    download:true,
-    header:true,
-    skipEmptyLines:true,
-    complete: res=>{
-      rows = res.data.filter(r=>r.Content && r.Content.trim());
-      populateA();
-      $('loading').style.display='none';
-      $('app').style.display='block';
-    },
-    error: err=>{
-      console.error(err);
-      $('loadingText').textContent='Error loading data';
-      $('loadBtn').disabled=false;
-    }
-  });
+ $('loadBtn').disabled=true;
+ $('loadingText').style.display='block';
+ Papa.parse(CSV_URL,{
+  download:true,header:true,skipEmptyLines:true,
+  complete:r=>{
+    rows=r.data;
+    const contents=[...new Set(rows.map(x=>x.Content))];
+    contents.forEach(c=>$('contentSelect').add(new Option(c,c)));
+    $('loading').style.display='none';
+    $('app').style.display='block';
+  }
+ });
 }
 
-function populateA(){
-  const sel=$('colA');
-  sel.innerHTML='<option value="">-- choose --</option>';
-  const seen=new Set();
-  rows.forEach(r=>{
-    const val=r[keyA].trim();
-    if(!seen.has(val)){ sel.appendChild(new Option(val,val)); seen.add(val); }
-  });
+$('contentSelect').onchange=()=>{
+ const val=$('contentSelect').value;
+ const teamSel=$('teamSelect');
+ teamSel.innerHTML='<option value="">-- choose --</option>';
+ teamSel.disabled=!val;
+ rows.filter(r=>r.Content===val)
+     .forEach(r=>teamSel.add(new Option(r.Team,r.Team)));
+};
+
+function youtubeEmbed(url){
+ try{
+  const id=url.includes('youtu.be')
+   ? url.split('/').pop()
+   : new URL(url).searchParams.get('v');
+  return id
+   ? `<iframe src="https://www.youtube.com/embed/${id}" allowfullscreen></iframe>`
+   : `<a href="${url}" target="_blank">${url}</a>`;
+ }catch{return ''}
 }
 
-function renderResults(list){
-  if(!list.length) return '<p>No results.</p>';
-  let html='<table><thead><tr>';
-  [keyA,keyB,keyC,keyD].forEach(h=> html+=`<th>${escapeHtml(h)}</th>`);
-  html+='</tr></thead><tbody>';
-  list.forEach(r=>{
-    const linkVal = r[keyC] ? `<a href="${escapeHtml(r[keyC])}" target="_blank">${escapeHtml(r[keyC])}</a>` : '';
-    html+='<tr>';
-    html+=`<td>${escapeHtml(r[keyA]||'')}</td>`;
-    html+=`<td>${escapeHtml(r[keyB]||'')}</td>`;
-    html+=`<td>${linkVal}</td>`;
-    html+=`<td><pre class="comments">${escapeHtml(r[keyD]||'')}</pre></td>`;
-    html+='</tr>';
-  });
-  html+='</tbody></table>';
-  return html;
-}
+$('showBtn').onclick=()=>{
+ const c=$('contentSelect').value;
+ const t=$('teamSelect').value;
+ const r=rows.find(x=>x.Content===c && x.Team===t);
+ if(!r)return alert('Please select Content and Team');
+ $('out').innerHTML=`
+  <div class="section-title">Content</div>${r.Content}
+  <div class="section-title">Preview</div>
+  <img class="preview-img" src="${r.Preview}">
+  <div class="section-title">Showcase</div>
+  ${r.Showcase?youtubeEmbed(r.Showcase):''}
+ `;
+ $('out').style.display='block';
 
-$('showBtn').addEventListener('click', ()=>{
-  const a=$('colA').value;
-  if(!a){alert('Please select Content');return;}
-  const matched=rows.filter(r=>r[keyA].trim()===a);
-  $('out').innerHTML=renderResults(matched);
-  $('out').style.display='block';
-});
+ document.querySelector('.preview-img').onclick=()=>{
+  $('overlayImg').src=r.Preview;
+  $('imgOverlay').style.display='flex';
+ };
+};
 
-$('resetBtn').addEventListener('click', ()=>{
-  $('colA').selectedIndex=0;
-  $('out').innerHTML='';
-  $('out').style.display='none';
-});
+$('resetBtn').onclick=()=>{
+ $('contentSelect').selectedIndex=0;
+ $('teamSelect').innerHTML='<option value="">-- choose --</option>';
+ $('teamSelect').disabled=true;
+ $('out').style.display='none';
+};
 
-const modeToggle=$('modeToggle');
-function updateToggle(){ modeToggle.textContent=document.body.classList.contains('dark')?'☀️ Light Mode':'🌙 Dark Mode'; }
-modeToggle.addEventListener('click',()=>{document.body.classList.toggle('dark');updateToggle();});
-updateToggle();
+$('loadBtn').onclick=loadData;
 
-$('loadBtn').addEventListener('click', loadData);
+$('imgOverlay').onclick=e=>{
+ if(e.target.id==='imgOverlay'||e.target.className==='close')
+  $('imgOverlay').style.display='none';
+};
+
+$('modeToggle').onclick=()=>{
+ document.body.classList.toggle('dark');
+ $('modeToggle').textContent=
+  document.body.classList.contains('dark')?'☀️ Light Mode':'🌙 Dark Mode';
+};
 </script>
 </body>
 </html>
