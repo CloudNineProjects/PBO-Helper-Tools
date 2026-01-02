@@ -1,204 +1,327 @@
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>PBO FAQ</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAQ Tool</title>
 
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <style>
-  :root{
-    --bg-light:#666769;
-    --bg-dark:#1A252C;
-    --card-light:#02491D;
-    --card-dark:#023804;
-    --title-color:#F0F0F0;
-  }
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif}
-  body{background:var(--bg-light);color:#F0F0F0}
-  body.dark{background:var(--bg-dark);color:#F0F0F0}
+body{
+  font-family:Arial, sans-serif;
+  background:#666769;
+  color:#f0f0f0;
+  margin:0;
+}
+header{
+  padding:10px;
+  text-align:right;
+}
+button{
+  padding:8px 14px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  margin:4px;
+}
+.card{
+  background:#02491D;
+  border-radius:10px;
+  padding:15px;
+  margin:20px;
+}
+.controls{
+  max-width:420px;
+}
+select{
+  padding:6px;
+  margin:4px 0;
+  width:100%;
+}
+.results{
+  margin-top:12px;
+}
 
-  /* toggle top-right */
-  .mode-toggle{
-    position:fixed;
-    top:12px;
-    right:12px;
-    z-index:1200;
-    background:rgba(255,255,255,0.9);
-    color:#111;
-    padding:6px 10px;
-    border-radius:8px;
-    cursor:pointer;
-    box-shadow:0 4px 12px rgba(0,0,0,0.15);
-    user-select:none;
-    font-size:14px;
-  }
-  body.dark .mode-toggle{background:rgba(0,0,0,0.7);color:#F0F0F0}
+.content-box{
+  margin-top:16px;
+  padding:14px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px;
+  white-space:pre-wrap;   /* WICHTIG: Textfluss */
+  line-height:1.45;
+  max-height:400px;
+  overflow:auto;
+}
 
-  /* loading screen */
-  .loader{
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    gap:14px;
-    text-align:center;
-  }
-  .loader img.logo{width:220px;height:220px;object-fit:cover;border-radius:50%;box-shadow:0 8px 24px rgba(0,0,0,0.25)}
-  .load-btn{
-    padding:10px 18px;
-    border-radius:8px;
-    border:none;
-    background:#F0F0F0;
-    color:#000000;
-    cursor:pointer;
-    font-size:16px;
-    width:auto;  /* fix: no full width */
-  }
-  .loading-text{color:rgba(255,255,255,0.85);margin-top:6px;font-size:0.95rem}
+/* ===== FAQ VIDEO (nur Video-Abstand angepasst) ===== */
+.yt-toggle{
+  cursor:pointer;
+  color:#9fe6b8;
+  font-size:0.9em;
+  margin:2px 0;
+  display:inline-block;
+}
 
-  /* app */
-  .wrap{max-width:760px;margin:28px auto;padding:18px}
-  .card{
-    border-radius:12px;
-    padding:18px;
-    background:var(--card-light);
-    color:#F0F0F0;
-    box-shadow:0 10px 30px rgba(0,0,0,0.08)
-  }
-  body.dark .card{background:var(--card-dark)}
-  h1{margin:0 0 12px;color:var(--title-color);font-size:20px}
-  label{display:block;font-size:0.95rem;margin-top:10px;margin-bottom:6px;color:#F0F0F0}
-  select,button,input[type="text"]{
-    width:100%;
-    box-sizing:border-box;
-    padding:10px 12px;
-    border-radius:8px;
-    border:1px solid rgba(0,0,0,0.1);
-    font-size:15px;
-    margin-bottom:10px
-  }
-  select{background:#F0F0F0;color:#000}
-  body.dark select{background:#000;color:#F0F0F0;border:1px solid rgba(255,255,255,0.06)}
-  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .controls button{width:auto;padding:10px 14px;border-radius:8px}
-  .results{margin-top:12px;background:rgba(255,255,255,0.06);padding:12px;border-radius:8px}
-  pre.expl{white-space:pre-wrap;margin:0;font-family:inherit}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{text-align:left;padding:8px;border-bottom:1px solid rgba(255,255,255,0.06);vertical-align:top}
-  th{background:rgba(0,0,0,0.06)}
-  @media(max-width:560px){
-    .wrap{padding:12px;margin:12px}
-    .loader img.logo{width:180px;height:180px}
-  }
+.yt-preview{
+  display:none;
+  max-width:360px;
+  margin:2px 0;
+}
+
+.yt-preview iframe{
+  width:100%;
+  height:200px;
+  border:none;
+  border-radius:8px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+th,td{
+  border:1px solid #999;
+  padding:6px;
+}
+
+#loading{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+#app{ display:none; }
+
+/* ===== DARK MODE ===== */
+body.dark-mode{
+  --bg:#1A252C;
+  --card:#023804;
+  background:var(--bg);
+  color:#f1f1f1;
+}
+body.dark-mode .card{
+  background:var(--card);
+}
 </style>
 </head>
-<body>
-<div id="modeToggle" class="mode-toggle">🌙 Dark Mode</div>
 
-<!-- Loading screen -->
-<div id="loading" class="loader">
-  <img class="logo" src="https://i.imgur.com/XZcfQzw.png" alt="logo">
-  <button id="loadBtn" class="load-btn">Load Data</button>
-  <div id="loadingText" class="loading-text" style="display:none">Loading...</div>
+<body>
+
+<header id="mainHeader" style="display:none">
+  <button id="darkBtn">🌙 Dark</button>
+</header>
+
+<div id="loading">
+  <img src="https://i.imgur.com/XZcfQzw.png" style="max-width:200px; margin-bottom:20px;">
+  <p>Loading...</p>
 </div>
 
-<!-- App -->
-<div id="app" class="wrap" style="display:none">
+<div id="app">
+
+  <!-- FAQ -->
   <div class="card">
-    <label for="typeSelect">Type</label>
-    <select id="typeSelect"><option value="">-- choose type --</option></select>
-    <label for="subtypeSelect">Subtype</label>
-    <select id="subtypeSelect" disabled><option value="">-- choose subtype --</option></select>
-    <div class="controls" style="margin-top:8px">
-      <button id="showBtn" style="background:#F0F0F0;color:#111">Show</button>
-      <button id="resetBtn" style="background:#F0F0F0;color:#111">Reset</button>
+    <h2>FAQ</h2>
+    <div class="controls">
+      <label>Choose Type</label>
+      <select id="typeSel"></select>
+
+      <label>Choose Subtype</label>
+      <select id="subSel" disabled></select>
+
+      <button id="showFaq">Show</button>
+      <button id="resetFaq">Reset</button>
     </div>
-    <div id="out" class="results" style="display:none"></div>
+    <div id="faqOut" class="results"></div>
   </div>
+
+  <!-- Regi Rotation -->
+  <div class="card">
+    <h2>Regi Rotation</h2>
+    <div class="controls">
+      <label>Choose Time</label>
+      <select id="regiTime"></select>
+      <button id="regiShow">Show</button>
+      <button id="regiReset">Reset</button>
+    </div>
+    <div id="regiOut" class="results"></div>
+  </div>
+
+  <!-- Shoal Cave -->
+  <div class="card">
+    <h2>Shoal Cave Time</h2>
+    <div class="controls">
+      <button id="shoalBtn">Check Tide</button>
+      <button id="shoalReset">Reset</button>
+    </div>
+    <div id="shoalOut" class="results"></div>
+  </div>
+
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded",()=>{
+
 const $=id=>document.getElementById(id);
-const escapeHtml=s=>s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const esc=s=>String(s||"").replace(/[&<>]/g,m=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;"
+}[m]));
 
-const CSV="https://docs.google.com/spreadsheets/d/e/2PACX-1vSfISqMJoPKSFFO4tRUY1V_L7J5C02XG7xbs_T0y7dcWdPjvAKX4064cVGHGgYJ7PFkiOHoy74j7KyU/pub?output=csv";
-let rows=[],fields=[],keyType=null,keySubtype=null,keyExpl=null;
+/* ===== FAQ CONTENT RENDERER (FINAL) ===== */
+function renderFaqContent(raw){
+  let vid=0;
+  return raw.split(/\n+/).map(line=>{
+    const m=line.match(
+      /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/
+    );
 
-function findKey(cands){
-  for(const c of cands){
-    const f=fields.find(h=>h.trim().toLowerCase()===c.toLowerCase());
-    if(f)return f;
-  }
-  for(const c of cands){
-    const f=fields.find(h=>h.toLowerCase().includes(c.toLowerCase()));
-    if(f)return f;
-  }
-  return fields[0];
-}
-
-function loadData(){
-  $("loadBtn").disabled=true;
-  $("loadingText").style.display="block";
-  Papa.parse(CSV,{
-    download:true,header:true,skipEmptyLines:true,
-    transformHeader:h=>h?h.trim():h,
-    complete:res=>{
-      rows=res.data.filter(r=>Object.values(r).some(v=>String(v||"").trim()!==""));
-      fields=res.meta.fields.map(f=>f.trim());
-      keyType=findKey(["type"]); keySubtype=findKey(["subtype"]); keyExpl=findKey(["explanation"]);
-      populateType();
-      $("loading").style.display="none";
-      $("app").style.display="block";
+    if(m){
+      const id=`yt_${vid++}`;
+      return `
+<span class="yt-toggle" onclick="
+  const v=document.getElementById('${id}');
+  const open=v.style.display==='block';
+  v.style.display=open?'none':'block';
+  this.textContent=open?'▶ Show Video':'▼ Hide Video';
+">▶ Show Video</span>
+<div id="${id}" class="yt-preview">
+  <iframe src="https://www.youtube.com/embed/${m[1]}" allowfullscreen></iframe>
+</div>`;
     }
+
+    return esc(line);
+  }).join("\n");  // Zeilenumbrüche bewusst beibehalten
+}
+
+/* dark mode */
+$("darkBtn").onclick=()=>{
+  document.body.classList.toggle("dark-mode");
+  $("darkBtn").textContent =
+    document.body.classList.contains("dark-mode")
+    ? "☀️ Light"
+    : "🌙 Dark";
+};
+
+/* CSV URLs */
+const FAQ_CSV  ="https://docs.google.com/spreadsheets/d/e/2PACX-1vSfISqMJoPKSFFO4tRUY1V_L7J5C02XG7xbs_T0y7dcWdPjvAKX4064cVGHGgYJ7PFkiOHoy74j7KyU/pub?output=csv";
+const REGI_CSV ="https://docs.google.com/spreadsheets/d/e/2PACX-1vSnZTHT3SeW7VWywFDBWhvjor0NqrwEcXPyBPOH53FD_Z5GHPNhO4NlGfpzniRjpuJBHna8vZJ1Ndia/pub?output=csv";
+
+let faqRows=[], faqFields=[];
+let regiRows=[], regiFields=[];
+
+/* load */
+async function loadAll(){
+  const loadCSV=url=>new Promise(res=>{
+    Papa.parse(url,{
+      download:true,
+      header:true,
+      skipEmptyLines:true,
+      complete:r=>res({ rows:r.data, fields:r.meta.fields })
+    });
   });
+
+  const [faq,regi]=await Promise.all([
+    loadCSV(FAQ_CSV),
+    loadCSV(REGI_CSV)
+  ]);
+
+  faqRows=faq.rows; faqFields=faq.fields;
+  regiRows=regi.rows; regiFields=regi.fields;
+
+  initFAQ();
+  initRegi();
+
+  $("loading").style.display="none";
+  $("app").style.display="block";
+  $("mainHeader").style.display="block";
 }
 
-function populateType(){
-  const sel=$("typeSelect"); sel.innerHTML='<option value="">-- choose type --</option>';
-  const types=rows.map(r=>(r[keyType]||"").trim()).filter(Boolean);
-  const seen=new Set();
-  types.forEach(t=>{if(!seen.has(t)){sel.appendChild(new Option(t,t));seen.add(t)}});
+/* FAQ */
+function initFAQ(){
+  const t=$("typeSel");
+  t.innerHTML='<option value="">-- choose --</option>';
+  [...new Set(faqRows.map(r=>r[faqFields[0]]))]
+    .filter(Boolean)
+    .forEach(v=>t.appendChild(new Option(v,v)));
 }
 
-function populateSubtypeFor(typeVal){
-  const sel=$("subtypeSelect"); sel.innerHTML='<option value="">-- choose subtype --</option>'; sel.disabled=true;
-  if(!typeVal)return;
-  rows.filter(r=>(r[keyType]||"").trim()===typeVal)
-      .forEach(r=>sel.appendChild(new Option((r[keySubtype]||"").trim(),(r[keySubtype]||"").trim())));
-  sel.disabled=false;
+$("typeSel").onchange=()=>{
+  const s=$("subSel"), v=$("typeSel").value;
+  s.innerHTML='<option value="">-- choose --</option>';
+  if(!v){ s.disabled=true; return; }
+  [...new Set(
+    faqRows.filter(r=>r[faqFields[0]]===v).map(r=>r[faqFields[1]])
+  )].filter(Boolean)
+   .forEach(x=>s.appendChild(new Option(x,x)));
+  s.disabled=false;
+};
+
+$("showFaq").onclick=()=>{
+  const t=$("typeSel").value, s=$("subSel").value;
+  const m=faqRows.find(
+    r=>r[faqFields[0]]===t && r[faqFields[1]]===s
+  );
+  $("faqOut").innerHTML = m
+    ? `<div class="content-box">${renderFaqContent(m[faqFields[2]])}</div>`
+    : "<p>No results.</p>";
+};
+
+$("resetFaq").onclick=()=>{
+  $("typeSel").value="";
+  $("subSel").innerHTML='<option value="">-- choose --</option>';
+  $("subSel").disabled=true;
+  $("faqOut").innerHTML="";
+};
+
+/* Regi */
+function initRegi(){
+  const s=$("regiTime");
+  s.innerHTML='<option value="">-- choose --</option>';
+  [...new Set(regiRows.map(r=>r[regiFields[0]]))]
+    .filter(Boolean)
+    .forEach(v=>s.appendChild(new Option(v,v)));
 }
 
-function renderResults(match){
-  let html="<table><thead><tr><th>"+keyType+"</th><th>"+keySubtype+"</th><th>"+keyExpl+"</th></tr></thead><tbody>";
-  match.forEach(r=>{
-    html+="<tr><td>"+escapeHtml(r[keyType]||"")+"</td><td>"+escapeHtml(r[keySubtype]||"")+"</td><td><pre class='expl'>"+escapeHtml(r[keyExpl]||"")+"</pre></td></tr>";
-  });
-  html+="</tbody></table>"; return html;
-}
+$("regiShow").onclick=()=>{
+  const t=$("regiTime").value;
+  if(!t) return;
+  const rows=regiRows.filter(r=>r[regiFields[0]]===t);
+  $("regiOut").innerHTML = rows.length
+    ? `<table><thead><tr>
+        <th>${regiFields[1]}</th>
+        <th>${regiFields[2]}</th>
+      </tr></thead><tbody>${
+        rows.map(r=>`<tr><td>${esc(r[regiFields[1]])}</td><td>${esc(r[regiFields[2]])}</td></tr>`).join("")
+      }</tbody></table>`
+    : "No results.";
+};
 
-$("typeSelect").addEventListener("change",e=>populateSubtypeFor(e.target.value));
-$("showBtn").addEventListener("click",()=>{
-  const t=$("typeSelect").value,s=$("subtypeSelect").value;
-  if(!t||!s){alert("Select type and subtype");return;}
-  const m=rows.filter(r=>(r[keyType]||"").trim()===t&&(r[keySubtype]||"").trim()===s);
-  $("out").innerHTML=renderResults(m); $("out").style.display="block";
+$("regiReset").onclick=()=>{
+  $("regiTime").value="";
+  $("regiOut").innerHTML="";
+};
+
+/* Shoal */
+$("shoalBtn").onclick=()=>{
+  const n=new Date();
+  const m=n.getUTCHours()*60+n.getUTCMinutes();
+  const low=[[0,180],[360,540],[720,900],[1080,1260]]
+    .some(([a,b])=>m>=a&&m<b);
+  $("shoalOut").innerHTML =
+    `UTC ${n.toISOString().slice(11,16)} — <b>${low?"Low Tide":"High Tide"}</b>`;
+};
+
+$("shoalReset").onclick=()=>{
+  $("shoalOut").innerHTML="";
+};
+
+loadAll();
+
 });
-$("resetBtn").addEventListener("click",()=>{
-  $("typeSelect").selectedIndex=0; $("subtypeSelect").innerHTML='<option value="">-- choose subtype --</option>'; $("subtypeSelect").disabled=true;
-  $("out").innerHTML=""; $("out").style.display="none";
-});
-
-/* mode toggle with text */
-const toggle=$("modeToggle");
-function updateToggle(){toggle.textContent=document.body.classList.contains("dark")?"☀️ Light Mode":"🌙 Dark Mode";}
-toggle.addEventListener("click",()=>{document.body.classList.toggle("dark");updateToggle();});
-updateToggle();
-
-$("loadBtn").addEventListener("click",()=>{ $("loadingText").textContent="Loading..."; loadData(); });
 </script>
+
 </body>
 </html>
