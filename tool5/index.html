@@ -1,276 +1,281 @@
-
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>PBO Route Planner</title>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <style>
-    :root{
-      --bg-light:#666769;
-      --bg-dark:#1A252C;
-      --card-light:#02491D;
-      --card-dark:#023804;
-      --accent:#F0F0F0;
-      --text-light:#F0F0F0;
-      --muted:rgba(255,255,255,0.85);
-    }
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif}
-    body{background:var(--bg-light);color:var(--text-light)}
-    body.dark{background:var(--bg-dark)}
-    /* mode toggle */
-    .mode-toggle{
-      position:fixed; top:12px; right:12px; z-index:2000;
-      background:rgba(255,255,255,0.9); color:#111; padding:6px 10px;
-      border-radius:8px; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:14px;
-    }
-    body.dark .mode-toggle{background:rgba(0,0,0,0.6); color:#F0F0F0}
-    /* loading */
-    .loader {
-      min-height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px; text-align:center;
-    }
-    .loader img.logo { width:220px; height:220px; object-fit:cover; border-radius:50%; box-shadow:none; }
-    .load-btn{ padding:10px 18px; border-radius:8px; border:none; background:var(--accent); color:#000; cursor:pointer; font-size:16px; width:auto; }
-    .loading-text{ color:var(--muted); margin-top:6px; font-size:0.95rem; }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>PBO Route Planner</title>
 
-    /* app */
-    .wrap{ max-width:940px; margin:26px auto; padding:16px; }
-    .card{ border-radius:12px; padding:18px; background:var(--card-light); color:var(--text-light); box-shadow:0 10px 30px rgba(0,0,0,0.08); }
-    body.dark .card{ background:var(--card-dark); }
-    h1{ margin:0 0 10px 0; color:var(--text-light); font-size:20px;}
-    label{ display:block; margin-top:10px; margin-bottom:6px; font-size:0.95rem; color:var(--text-light) }
-    select, button { padding:10px 12px; border-radius:8px; font-size:15px; border:1px solid rgba(0,0,0,0.06); width:100%; box-sizing:border-box; margin-bottom:10px; }
-    select{ background:#F0F0F0; color:#000; }
-    body.dark select{ background:#000; color:#F0F0F0; border:1px solid rgba(255,255,255,0.06); }
-    .controls{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .controls button{ width:auto; padding:10px 14px; border-radius:8px; cursor:pointer; }
-    .btn-primary{ background:var(--accent); color:#000; border:none; }
-    .btn-secondary{ background:#eef3fb; color:#111; border:1px solid rgba(0,0,0,0.05); }
-    .muted{ color:rgba(255,255,255,0.8); font-size:0.95rem; }
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
-    /* table & image */
-    .results{ margin-top:14px; background:rgba(255,255,255,0.04); padding:12px; border-radius:8px; }
-    table{ width:100%; border-collapse:collapse; }
-    th,td{ padding:10px; border-bottom:1px solid rgba(255,255,255,0.06); text-align:left; vertical-align:top; }
-    th{ background:rgba(0,0,0,0.06); }
-    .preview { margin-top:12px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; }
-    .preview img { max-width:360px; width:100%; height:auto; border-radius:8px; cursor:pointer; box-shadow:0 8px 20px rgba(0,0,0,0.25); }
-    .preview a { display:inline-block; text-decoration:none; color:inherit; }
-
-    /* modal */
-    .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.75); z-index:3000; }
-    .modal img{ max-width:95%; max-height:95%; border-radius:8px; box-shadow:0 14px 40px rgba(0,0,0,0.6); }
-
- @media (max-width:600px){
-  .loader img.logo { 
-    width: 160px; 
-    height: 160px;        /* Höhe = Breite */
-    border-radius: 50%;   /* rund */
-    object-fit: cover;
-  }
-  .preview img { 
-    max-width: 100%; 
-    height: auto; 
-  }
+<style>
+:root{
+  --bg-light:#666769;
+  --bg-dark:#1A252C;
+  --card-light:#02491D;
+  --card-dark:#023804;
+  --accent:#F0F0F0;
+  --text-light:#F0F0F0;
+  --muted:rgba(255,255,255,0.85);
 }
-  </style>
+html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif}
+body{background:var(--bg-light);color:var(--text-light)}
+body.dark{background:var(--bg-dark)}
+
+.mode-toggle{
+  position:fixed;top:12px;right:12px;z-index:2000;
+  background:rgba(255,255,255,0.9);color:#111;
+  padding:6px 10px;border-radius:8px;cursor:pointer
+}
+body.dark .mode-toggle{background:rgba(0,0,0,0.6);color:#F0F0F0}
+
+.loader{
+  min-height:100vh;display:flex;align-items:center;
+  justify-content:center;flex-direction:column;gap:14px
+}
+.loader img.logo{
+  width:200px;height:200px;border-radius:50%;object-fit:cover
+}
+.loading-text{opacity:.85}
+
+.wrap{max-width:940px;margin:26px auto;padding:16px}
+.card{
+  border-radius:12px;padding:18px;
+  background:var(--card-light);
+  box-shadow:0 10px 30px rgba(0,0,0,0.08)
+}
+body.dark .card{background:var(--card-dark)}
+
+label{display:block;margin-top:10px;margin-bottom:6px}
+select,button{
+  padding:10px 12px;border-radius:8px;font-size:15px;
+  width:100%;box-sizing:border-box;margin-bottom:10px
+}
+select{background:#F0F0F0;color:#000}
+.controls{display:flex;gap:10px}
+.controls button{width:auto}
+
+.results{margin-top:14px;background:rgba(255,255,255,0.04);padding:12px;border-radius:8px}
+table{width:100%;border-collapse:collapse}
+th,td{
+  padding:10px;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  text-align:center;
+  vertical-align:middle;
+}
+
+.preview img{
+  max-width:360px;border-radius:8px;
+  cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,0.25)
+}
+
+.modal{
+  position:fixed;inset:0;display:none;
+  align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.75);z-index:3000
+}
+.modal img{max-width:95%;max-height:95%}
+</style>
 </head>
+
 <body>
-  <div id="modeToggle" class="mode-toggle">🌙 Dark Mode</div>
 
-  <!-- Loading screen -->
-  <div id="loading" class="loader">
-    <img class="logo" src="https://i.imgur.com/XZcfQzw.png" alt="CloudNine">
-    <button id="loadBtn" class="load-btn">Load Data</button>
-    <div id="loadingText" class="loading-text" style="display:none">Loading…</div>
+<!-- Dark Mode Toggle (nur im Haupt-Tool sichtbar) -->
+<div id="modeToggle" class="mode-toggle" style="display:none">🌙 Dark Mode</div>
+
+<!-- ========= LOADING ========= -->
+<div id="loading" class="loader">
+  <img class="logo" src="https://i.imgur.com/XZcfQzw.png">
+  <div class="loading-text">Loading…</div>
+</div>
+
+<!-- ========= APP ========= -->
+<div id="app" class="wrap" style="display:none">
+
+<div class="card">
+  <label>Region</label>
+  <select id="regionSelect"></select>
+
+  <label>Location</label>
+  <select id="locationSelect" disabled></select>
+
+  <div class="controls">
+    <button id="showBtn">Show</button>
+    <button id="resetBtn">Reset</button>
   </div>
 
-  <!-- App -->
-  <div id="app" class="wrap" style="display:none">
-    <div class="card">
-      
-      <label for="regionSelect">Region</label>
-      <select id="regionSelect"><option value="">-- choose region --</option></select>
+  <div id="out" class="results" style="display:none"></div>
+  <div id="imagePreview" class="preview" style="display:none"></div>
+</div>
 
-      <label for="locationSelect">Location</label>
-      <select id="locationSelect" disabled><option value="">-- choose location --</option></select>
+<div class="card" style="margin-top:16px">
+  <h3>EV Spot Finder</h3>
 
-      <div class="controls">
-        <button id="showBtn" class="btn-primary">Show</button>
-        <button id="resetBtn" class="btn-secondary">Reset</button>
-      </div>
+  <label>Region</label>
+  <select id="evRegion"></select>
 
-      <div id="out" class="results" style="display:none"></div>
-      <div id="imagePreview" class="preview" style="display:none"></div>
-    </div>
+  <label>EV</label>
+  <select id="evSelect" disabled></select>
+
+  <div class="controls">
+    <button id="evShow">Show</button>
+    <button id="evReset">Reset</button>
   </div>
 
-  <!-- modal for full-size image -->
-  <div id="modal" class="modal"><img id="modalImg" src="" alt="full"/></div>
+  <div id="evOutput" class="results" style="display:none"></div>
+</div>
+</div>
+
+<div id="modal" class="modal"><img id="modalImg"></div>
 
 <script>
-  const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR1exPBTlYsrTJ0U4eLuFycLc6Vwwj3jtKgc6s4jZZa7UbSJLB_LJkcnIigkaJIYtBNHsicju6cv3FJ/pub?output=csv";
+const ROUTE_CSV="https://docs.google.com/spreadsheets/d/e/2PACX-1vR1exPBTlYsrTJ0U4eLuFycLc6Vwwj3jtKgc6s4jZZa7UbSJLB_LJkcnIigkaJIYtBNHsicju6cv3FJ/pub?output=csv";
+const EV_CSV="https://docs.google.com/spreadsheets/d/e/2PACX-1vS3s-al3s9rwdhK0FHls7J368zMl0Hdryc_y6MVwwXaiWLpgzImXs_9YsC5lXkwRdi_aPMi_gRHfsei/pub?output=csv";
 
-  // state
-  let rows = [], fields = [];
-  let keyRegion=null, keyLocation=null, keyTeleport=null, keyDirection=null, keyMap=null;
+let rows=[],fields=[],keyRegion,keyLocation,keyTeleport,keyDirection,keyMap;
+let evRows=[],evFields=[];
 
-  // helper: find header key by candidate names
-  function findKey(cands){
-    if(!fields || !fields.length) return null;
-    for(const c of cands){
-      const found = fields.find(f => f && f.trim().toLowerCase() === c.toLowerCase());
-      if(found) return found;
-    }
-    for(const c of cands){
-      const found = fields.find(f => f && f.trim().toLowerCase().includes(c.toLowerCase()));
-      if(found) return found;
-    }
-    return fields[0];
-  }
+function findKey(c){return fields.find(f=>f.toLowerCase().includes(c))}
 
-  // fetch CSV via PapaParse
-  function loadCsv(){
-    $('loadBtn').disabled = true;
-    $('loadingText').style.display = 'block';
-    $('loadingText').textContent = 'Loading…';
-    Papa.parse(CSV_URL, {
-      download: true,
-      header: true,
-      skipEmptyLines: true,
-      transformHeader: h => h ? h.trim() : h,
-      complete: function(res){
-        rows = (res.data || []).filter(r => Object.values(r).some(v => v !== null && v !== undefined && String(v).trim() !== ''));
-        fields = res.meta && res.meta.fields ? res.meta.fields.map(f => f.trim()) : Object.keys(rows[0]||{});
-        // detect columns (A-E)
-        keyRegion = findKey(['region','a']);
-        keyLocation = findKey(['location','b']);
-        keyTeleport = findKey(['teleport','c']);
-        keyDirection = findKey(['direction','d']);
-        keyMap = findKey(['map','e']);
-        populateRegions();
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-      },
-      error: function(err){
-        console.error('CSV load error', err);
-        $('loadingText').textContent = 'Error loading CSV';
-        $('loadBtn').disabled = false;
-      }
-    });
-  }
+/* ---------- LOAD ROUTES ---------- */
+function loadRoute(){
+return new Promise(res=>{
+Papa.parse(ROUTE_CSV,{
+download:true,header:true,
+complete:r=>{
+rows=r.data;fields=r.meta.fields;
+keyRegion=findKey("region");
+keyLocation=findKey("location");
+keyTeleport=findKey("teleport");
+keyDirection=findKey("direction");
+keyMap=findKey("map");
+populateRegions();
+res();
+}});});
+}
 
-  function $ (id) { return document.getElementById(id); }
+function populateRegions(){
+regionSelect.innerHTML='<option value="">-- choose region --</option>';
+[...new Set(rows.map(r=>r[keyRegion]).filter(Boolean))]
+.forEach(v=>regionSelect.add(new Option(v,v)));
+}
 
-  function populateRegions(){
-    const sel = $('regionSelect'); sel.innerHTML = '<option value="">-- choose region --</option>';
-    const vals = rows.map(r => (r[keyRegion]||'').toString().trim()).filter(Boolean);
-    const seen = new Set();
-    for(const v of vals){
-      if(!seen.has(v)){ sel.appendChild(new Option(v,v)); seen.add(v); }
-    }
-    $('locationSelect').innerHTML = '<option value="">-- choose location --</option>'; $('locationSelect').disabled = true;
-    $('out').innerHTML = ''; $('out').style.display = 'none'; $('imagePreview').style.display='none';
-  }
+regionSelect.onchange=()=>{
+locationSelect.innerHTML='<option value="">-- choose location --</option>';
+locationSelect.disabled=true;
+rows.filter(r=>r[keyRegion]===regionSelect.value)
+.forEach(r=>locationSelect.add(new Option(r[keyLocation],r[keyLocation])));
+locationSelect.disabled=false;
+};
 
-  function populateLocationsFor(region){
-    const sel = $('locationSelect'); sel.innerHTML = '<option value="">-- choose location --</option>'; sel.disabled = true;
-    if(!region) return;
-    const matched = rows.filter(r => (r[keyRegion]||'').toString().trim() === region);
-    matched.forEach(r => {
-      const v = (r[keyLocation]||'').toString().trim();
-      const opt = document.createElement('option'); opt.value = v; opt.textContent = v;
-      sel.appendChild(opt);
-    });
-    sel.disabled = false;
-  }
+showBtn.onclick=()=>{
+const matched=rows.filter(r=>r[keyRegion]===regionSelect.value&&r[keyLocation]===locationSelect.value);
+out.innerHTML=renderTable(matched);
+out.style.display="block";
+imagePreview.innerHTML="";
+matched.forEach(r=>{
+if(r[keyMap]){
+const img=document.createElement("img");
+img.src=r[keyMap];
+img.onclick=()=>openModal(r[keyMap]);
+imagePreview.appendChild(img);
+}});
+imagePreview.style.display="flex";
+};
 
-  function renderTable(rowsToShow){
-    if(!rowsToShow.length) return '<p>No results.</p>';
-    const headers = [keyRegion,keyLocation,keyTeleport,keyDirection].map(h => h||'');
-    let html = '<table><thead><tr>';
-    headers.forEach(h => html += `<th>${escapeHtml(h)}</th>`);
-    html += '</tr></thead><tbody>';
-    rowsToShow.forEach(r => {
-      html += '<tr>';
-      html += `<td>${escapeHtml(r[keyRegion]||'')}</td>`;
-      html += `<td>${escapeHtml(r[keyLocation]||'')}</td>`;
-      html += `<td>${escapeHtml(r[keyTeleport]||'')}</td>`;
-      html += `<td>${escapeHtml(r[keyDirection]||'')}</td>`;
-      html += '</tr>';
-    });
-    html += '</tbody></table>';
-    return html;
-  }
+resetBtn.onclick = () => {
+  // Selects zurücksetzen
+  regionSelect.selectedIndex = 0;
+  locationSelect.innerHTML = '<option value="">-- choose location --</option>';
+  locationSelect.disabled = true;
 
-  function escapeHtml(s){ return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  // Ausgabe & Bilder ausblenden
+  out.style.display = "none";
+  out.innerHTML = "";
+  imagePreview.style.display = "none";
+  imagePreview.innerHTML = "";
+};
 
-  // hook events
-  $('regionSelect').addEventListener('change', e => {
-    populateLocationsFor(e.target.value);
-    $('out').style.display='none'; $('imagePreview').style.display='none';
-  });
+function renderTable(rs){
+if(!rs.length)return"<p>No results.</p>";
+let h="<table><thead><tr>";
+[keyRegion,keyLocation,keyTeleport,keyDirection].forEach(k=>h+=`<th>${k}</th>`);
+h+="</tr></thead><tbody>";
+rs.forEach(r=>{
+h+="<tr>";
+[keyRegion,keyLocation,keyTeleport,keyDirection].forEach(k=>h+=`<td>${r[k]||""}</td>`);
+h+="</tr>";
+});
+return h+"</tbody></table>";
+}
 
-  $('showBtn').addEventListener('click', () => {
-    const region = $('regionSelect').value;
-    const location = $('locationSelect').value;
-    if(!region || !location){ alert('Bitte Region und Location wählen'); return; }
-    const matched = rows.filter(r => (r[keyRegion]||'').toString().trim() === region && (r[keyLocation]||'').toString().trim() === location);
-    $('out').innerHTML = renderTable(matched);
-    $('out').style.display = 'block';
+/* ---------- EV ---------- */
+function loadEv(){
+return new Promise(res=>{
+Papa.parse(EV_CSV,{
+download:true,header:true,
+complete:r=>{
+evRows=r.data;evFields=r.meta.fields;
+populateEvRegions();
+res();
+}});});
+}
 
-    // show image(s) from keyMap column (E) - display preview(s)
-    const imgs = matched.map(r => (r[keyMap]||'').toString().trim()).filter(Boolean);
-    const preview = $('imagePreview'); preview.innerHTML = '';
-    if(imgs.length){
-      imgs.forEach(url=>{
-        // sometimes URLs may be wrapped in quotes — remove them
-        let raw = url.replace(/^"(.*)"$/,'$1').trim();
-        // if it's a google HYPERLINK formula, extract quoted url
-        const m = raw.match(/"(https?:\/\/[^"]+)"/i);
-        if(m) raw = m[1];
-        // build image element with click to open modal/new tab
-        const a = document.createElement('a'); a.href = raw; a.target = '_blank'; a.rel = 'noopener noreferrer';
-        const img = document.createElement('img'); img.src = raw; img.alt = location + ' map preview';
-        img.addEventListener('click', (ev)=>{ ev.preventDefault(); openModal(raw); });
-        a.appendChild(img);
-        preview.appendChild(a);
-      });
-      preview.style.display = 'flex';
-    } else {
-      preview.style.display = 'none';
-    }
-  });
+function populateEvRegions(){
+evRegion.innerHTML='<option value="">-- choose region --</option>';
+[...new Set(evRows.map(r=>r[evFields[0]]).filter(Boolean))]
+.forEach(v=>evRegion.add(new Option(v,v)));
+}
 
-  $('resetBtn').addEventListener('click', () => {
-    $('regionSelect').selectedIndex = 0;
-    $('locationSelect').innerHTML = '<option value="">-- choose location --</option>'; $('locationSelect').disabled = true;
-    $('out').innerHTML = ''; $('out').style.display='none';
-    $('imagePreview').innerHTML = ''; $('imagePreview').style.display='none';
-  });
+evRegion.onchange=()=>{
+evSelect.innerHTML='<option value="">-- choose EV --</option>';
+evSelect.disabled=true;
+const evKey=evFields[2];
+[...new Set(evRows
+.filter(r=>r[evFields[0]]===evRegion.value)
+.map(r=>r[evKey]).filter(Boolean))]
+.forEach(v=>evSelect.add(new Option(v,v)));
+evSelect.disabled=false;
+};
 
-  // modal handling
-  function openModal(src){
-    const modal = $('modal'), modalImg = $('modalImg');
-    modalImg.src = src; modal.style.display = 'flex';
-  }
-  $('modal').addEventListener('click', ()=>{ $('modal').style.display = 'none'; $('modalImg').src = ''; });
+evShow.onclick=()=>{
+const rows=evRows.filter(r=>r[evFields[0]]===evRegion.value&&r[evFields[2]]===evSelect.value);
+evOutput.innerHTML=renderEv(rows);
+evOutput.style.display="block";
+};
 
-  // mode toggle
-  const modeToggle = $('modeToggle');
-  function updateToggle(){
-    modeToggle.textContent = document.body.classList.contains('dark') ? '☀️ Light Mode' : '🌙 Dark Mode';
-  }
-  modeToggle.addEventListener('click', ()=>{
-    document.body.classList.toggle('dark');
-    updateToggle();
-  });
-  updateToggle();
+evReset.onclick = () => {
+  evRegion.selectedIndex = 0;
+  evSelect.innerHTML = '<option value="">-- choose EV --</option>';
+  evSelect.disabled = true;
+  evOutput.style.display = "none";
+  evOutput.innerHTML = "";
+};
 
-  // bind load button
-  document.getElementById('loadBtn').addEventListener('click', loadCsv);
+function renderEv(rs){
+if(!rs.length)return"<p>No results.</p>";
+let h="<table><thead><tr>";
+evFields.slice(0,5).forEach(f=>h+=`<th>${f}</th>`);
+h+="</tr></thead><tbody>";
+rs.forEach(r=>{
+h+="<tr>";
+evFields.slice(0,5).forEach(f=>h+=`<td>${r[f]||""}</td>`);
+h+="</tr>";
+});
+return h+"</tbody></table>";
+}
+
+/* ---------- SHARED ---------- */
+function openModal(src){modal.style.display="flex";modalImg.src=src}
+modal.onclick=()=>modal.style.display="none";
+modeToggle.onclick=()=>document.body.classList.toggle("dark");
+
+/* ---------- AUTO LOAD ---------- */
+(async()=>{
+await Promise.all([loadRoute(),loadEv()]);
+loading.style.display="none";
+app.style.display="block";
+modeToggle.style.display="block";
+})();
 </script>
-
 </body>
 </html>
