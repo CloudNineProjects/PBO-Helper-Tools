@@ -2,87 +2,290 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>CloudNine Project — PBO Tools Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+<title>CloudNine — Blaze Tools Hub</title>
+
 <style>
-  body {
-    font-family: Inter, system-ui, Arial, sans-serif;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    background: #1A232C;
-    color: #F0F0F0;
-    text-align: center;
-  }
-  img.logo {
-    max-width: 220px;
-    margin-bottom: 20px;
-    border-radius: 50%;
-  }
-  h1 {
-    font-size: 2rem;
-    margin: 0 0 8px 0;
-  }
-  h2 {
-    font-size: 1.3rem;
-    margin: 0 0 20px 0;
-    color: #bbb;
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(2, 220px);
-    grid-gap: 12px 30px;
-    justify-content: center;
-    margin-bottom: 20px;
-  }
-  .btn {
-    display: block;
-    padding: 14px 22px;
-    background: #035F02;
-    color: #F0F0F0;
-    text-decoration: none;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    transition: background 0.2s;
-  }
-  .btn:hover {
-    background: #095bb0;
-  }
-  .vs-btn {
-    margin-top: 15px;
-    padding: 14px 22px;
-    background: #035F02;
-    color: #F0F0F0;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    border: none;
-    text-decoration: none;
-    display: inline-block;
-  }
-  .vs-btn:hover {
-    background: #095bb0;
-  }
+:root {
+  --bg-main: #0e141a;
+  --bg-soft: #1a232c;
+  --green-main: #1ea31e;
+  --green-dark: #0f6f0f;
+  --text-main: #f0f0f0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #1f2b35, var(--bg-main));
+  font-family: Inter, system-ui, Arial, sans-serif;
+  color: var(--text-main);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hub {
+  width: 100%;
+  max-width: 520px;
+  padding: 32px 20px;
+  text-align: center;
+}
+
+/* Branding */
+.logo-cloud {
+  width: 190px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+
+.handle {
+  font-weight: 600;
+  margin-bottom: 14px;
+  opacity: 0.9;
+}
+
+.logo-blaze {
+  width: 230px;
+  margin-bottom: 28px;
+}
+
+/* Carousel */
+.carousel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.nav {
+  background: none;
+  border: none;
+  color: var(--green-main);
+  font-size: 2.2rem;
+  cursor: pointer;
+  padding: 0 6px;
+}
+
+.viewport {
+  overflow: hidden;
+  width: 100%;
+  max-width: 360px;
+}
+
+.blocks {
+  display: flex;
+  transition: transform 0.35s ease;
+}
+
+.block {
+  min-width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 72px);
+  gap: 14px;
+  padding: 4px;
+}
+
+/* Tools */
+.tool {
+  background: linear-gradient(145deg, var(--green-main), var(--green-dark));
+  border-radius: 14px;
+  text-decoration: none;
+  color: white;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  text-align: center;
+  line-height: 1.2;
+  box-shadow: 0 6px 18px rgba(0,0,0,.35);
+  transition: transform .15s ease, box-shadow .15s ease;
+  font-size: clamp(0.75rem, 2.5vw, 1rem);
+}
+
+.tool-icon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.tool:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(0,0,0,.45);
+}
+
+.tool.placeholder {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Dots */
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #3a444d;
+}
+
+.dot.active {
+  background: var(--green-main);
+}
+
+/* Mobile fine-tuning */
+@media (max-width: 480px) {
+  .logo-cloud { width: 170px; }
+  .logo-blaze { width: 210px; }
+}
 </style>
 </head>
-<body>
-  <img class="logo" src="https://i.imgur.com/gtzIEvm.png" alt="CloudNine Logo"/>
-  <h1>CloudNine Project</h1>
-  <h2>Blaze Tools Hub</h2>
 
-  <div class="grid">
-    <a class="btn" href="tool1/">🔧 Toolbox A</a>
-    <a class="btn" href="tool3/">❓ FAQ</a>
-    <a class="btn" href="tool2/">🔧 Toolbox B</a>
-    <a class="btn" href="tool4/">⚔️ Team Database</a>
-    <a class="btn" href="tool8/">🔎 Dynamax Helper</a>
-    <a class="btn" href="tool5/">🗺️ Route Planner</a>
-    <a class="btn" href="tool7/">📋 Checklist</a>
-    <a class="btn" href="tool6/">❄️Winter Event</a>
+<body>
+
+<div class="hub">
+
+  <img class="logo-cloud" src="https://i.imgur.com/gtzIEvm.png" alt="CloudNine Logo">
+  <div class="handle">@CloudNine</div>
+  <img class="logo-blaze" src="https://i.imgur.com/irx1VWe.png" alt="Blaze Tools">
+
+  <div class="carousel">
+    <button class="nav" onclick="prev()">‹</button>
+
+    <div class="viewport" id="viewport">
+      <div class="blocks" id="blocks">
+
+        <!-- Block 1 -->
+        <div class="block">
+          <a class="tool" href="tool1/">
+			<img src="https://i.imgur.com/LPO5vYR.png" alt="" class="tool-icon">
+			<span>Pokémon Search</span>
+		  </a>
+          <a class="tool" href="tool2/">
+			<img src="https://i.imgur.com/GNsJG3x.png" alt="" class="tool-icon">
+			<span>Item Finder</span>
+		  </a>
+		  <a class="tool" href="tool5/">
+			<img src="https://i.imgur.com/KAYDo2P.png" alt="" class="tool-icon">
+			<span>Location Finder</span>
+		  </a>
+		  <a class="tool" href="tool6/">
+			<img src="https://i.imgur.com/yGHfv5w.png" alt="" class="tool-icon">
+			<span>Events</span>
+		  </a>          
+        </div>
+
+        <!-- Block 2 -->
+        <div class="block">
+          <a class="tool" href="tool3/">
+			<img src="https://i.imgur.com/2VH9Cyn.png" alt="" class=="tool-icon">
+			<span>FAQ</span>
+		  </a>
+		  <a class="tool" href="tool10/">
+			<img src="https://i.imgur.com/uDGUscC.png" alt="" class="tool-icon">
+			<span>Quests</span>
+		  </a>
+		  <a class="tool" href="tool4/">
+			<img src="https://i.imgur.com/2bOrh4B.png" alt="" class=="tool-icon">
+			<span>Teams</span>
+		  </a>
+          <a class="tool" href="tool9/">
+			<img src="https://i.imgur.com/FDvkfwV.png" alt="" class="tool-icon">
+			<span>PvP Bans</span>
+		  </a>          
+        </div>
+
+        <!-- Block 3 (nur 2 Tools, gleiche Größe dank Platzhalter) -->
+        <div class="block">
+          <a class="tool" href="tool8/">
+			<img src="https://i.imgur.com/egGOhqO.png" alt="" class="tool-icon">
+			<span>Dynamax</span>
+		  </a>
+		  <a class="tool" href="tool7/">
+			<img src="https://i.imgur.com/pS5ABrz.png" alt="" class="tool-icon">
+			<span>Checklist</span>
+		  </a>
+          <div class="tool placeholder"></div>
+          <div class="tool placeholder"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <button class="nav" onclick="next()">›</button>
   </div>
+
+  <div class="dots" id="dots"></div>
+
+</div>
+
+<script>
+const blocksContainer = document.getElementById('blocks');
+const blocks = document.querySelectorAll('.block');
+const dots = document.getElementById('dots');
+let index = 0;
+
+/* Auto-fill blocks to 4 items */
+blocks.forEach(block => {
+  const count = block.querySelectorAll('.tool').length;
+  for (let i = count; i < 4; i++) {
+    const filler = document.createElement('div');
+    filler.className = 'tool placeholder';
+    block.appendChild(filler);
+  }
+});
+
+/* Create dots */
+blocks.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' active' : '');
+  dots.appendChild(d);
+});
+
+function update() {
+  blocksContainer.style.transform = `translateX(-${index * 100}%)`;
+  document.querySelectorAll('.dot').forEach((d, i) =>
+    d.classList.toggle('active', i === index)
+  );
+}
+
+function next() {
+  index = (index + 1) % blocks.length;
+  update();
+}
+
+function prev() {
+  index = (index - 1 + blocks.length) % blocks.length;
+  update();
+}
+
+/* Swipe */
+let startX = 0;
+const viewport = document.getElementById('viewport');
+
+viewport.addEventListener('touchstart', e => {
+  startX = e.touches[0].clientX;
+});
+
+viewport.addEventListener('touchend', e => {
+  const endX = e.changedTouches[0].clientX;
+  if (startX - endX > 50) next();
+  if (endX - startX > 50) prev();
+});
+</script>
 
 </body>
 </html>
