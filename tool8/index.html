@@ -164,13 +164,12 @@
 </style>
 </head>
 <body>
-<div id="modeToggle" class="mode-toggle">🌙 Dark Mode</div>
+<div id="modeToggle" class="mode-toggle" style="display:none;">🌙 Dark Mode</div>
 
 <!-- Loading -->
 <div id="loading" class="loader">
   <img class="logo" src="https://i.imgur.com/XZcfQzw.png" alt="Dynamax logo">
-  <button id="loadBtn" class="load-btn">Load Data</button>
-  <div id="loadingText" class="loading-text" style="display:none">Loading...</div>
+  <div id="loadingText" class="loading-text">Loading...</div>
 </div>
 
 <!-- App -->
@@ -253,7 +252,7 @@ function uniqueFromColumn(rows,col){const s=new Set();rows.forEach(r=>{const v=(
 function populateSelect(sel,arr,ph){sel.innerHTML='';const o=document.createElement('option');o.value='';o.textContent=ph||'-- select --';sel.appendChild(o);arr.forEach(v=>{const op=document.createElement('option');op.value=v;op.textContent=v;sel.appendChild(op);});}
 function renderPre(s){return`<pre class="preserve">${escapeHtml(s||'')}</pre>`;}
 function renderTable(rows,fields,cols){let h='<div style="overflow:auto"><table><thead><tr>';cols.forEach(c=>h+=`<th>${escapeHtml(c)}</th>`);h+='</tr></thead><tbody>';rows.forEach(r=>{h+='<tr>';cols.forEach(c=>{const raw=r[c]||'';const cls=valueClass(raw);const content=(typeof raw==='string'&&raw.includes('\n'))?`<pre class="preserve" style="margin:0">${escapeHtml(raw)}</pre>`:escapeHtml(raw);h+=`<td class="${cls}">${content}</td>`});h+='</tr>';});h+='</tbody></table></div>';return h;}
-function loadAll(){$('loadBtn').disabled=true;showLoading('Loading...');Promise.all([parseCSV(URL_INFO).then(r=>{infoFields=r.fields;infoRows=r.data;}),parseCSV(URL_DB).then(r=>{dbFields=r.fields;dbRows=r.data;}),parseCSV(URL_MOVE).then(r=>{moveFields=r.fields;moveRows=r.data;}),parseCSV(URL_ATTACK).then(r=>{atkFields=r.fields;atkRows=r.data;})]).then(()=>{hideLoading();$('loading').style.display='none';$('app').style.display='flex';populate();}).catch(e=>{$('loadingText').textContent='Error';console.error(e);$('loadBtn').disabled=false;});}
+function loadAll(){showLoading('Loading...');Promise.all([parseCSV(URL_INFO).then(r=>{infoFields=r.fields;infoRows=r.data;}),parseCSV(URL_DB).then(r=>{dbFields=r.fields;dbRows=r.data;}),parseCSV(URL_MOVE).then(r=>{moveFields=r.fields;moveRows=r.data;}),parseCSV(URL_ATTACK).then(r=>{atkFields=r.fields;atkRows=r.data;})]).then(()=>{hideLoading();$('loading').style.display='none';$('app').style.display='flex';$('modeToggle').style.display = 'block';populate();}).catch(e=>{$('loadingText').textContent='Error';console.error(e);});}
 function populate(){const infoA=infoFields[0];populateSelect($('infoFilter'),uniqueFromColumn(infoRows,infoA),'-- select --');const dbA=dbFields[0];populateSelect($('dbFilter'),uniqueFromColumn(dbRows,dbA),'-- select --');const moveA=moveFields[0];populateSelect($('moveFilter'),uniqueFromColumn(moveRows,moveA),'-- select --');const defenders=atkFields.slice(1);populateSelect($('atkDef1'),defenders,'-- Defender --');populateSelect($('atkDef2'),defenders,'-- Defender (opt.) --');const rowLabel=atkFields[0];const moveNames=uniqueFromColumn(atkRows,rowLabel);['def1','def2','def3','def4'].forEach(id=>populateSelect($(id),moveNames,'-- Move --'));}
 
 /* Cards functionality unchanged */
@@ -304,7 +303,7 @@ $('moveReset').onclick=()=>{$('moveFilter').selectedIndex=0;$('moveOut').style.d
 const modeToggle=$('modeToggle');function updateModeLabel(){modeToggle.textContent=document.body.classList.contains('dark')?'☀️ Light Mode':'🌙 Dark Mode';}
 modeToggle.onclick=()=>{document.body.classList.toggle('dark');updateModeLabel();};
 updateModeLabel();
-$('loadBtn').onclick=loadAll;
+window.addEventListener('DOMContentLoaded', loadAll);
 </script>
 </body>
 </html>
