@@ -1,407 +1,327 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PBO Pokemon Tool</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #666769;
-      color: #F0F0F0;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      display: flex;
-      justify-content: flex-end;
-      padding: 10px;
-    }
-    button {
-      padding: 10px 18px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin: 5px;
-    }
-    button:hover {
-      opacity: 0.9;
-    }
-    .section {
-      margin: 20px;
-      padding: 15px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-    .highlight {
-      background-color: #02491D;
-    }
-    table {
-      border-collapse: collapse;
-      margin-top: 10px;
-      width: 100%;
-    }
-    th, td {
-      border: 1px solid #999;
-      padding: 6px;
-      text-align: left;
-    }
-    #loading-screen {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      text-align: center;
-    }
-    #app {
-      display: none;
-    }
-    .dark-mode {
-      background: #1A252C;
-      color: #f1f1f1;
-    }
-    .dark-mode .section {
-      border: 1px solid #555;
-    }
-    .dark-mode table {
-      border: 1px solid #555;
-      background: #1e1e1e;
-    }
-    .dark-mode th, 
-    .dark-mode td {
-      border: 1px solid #555;
-      color: #f1f1f1;
-    }
-    .dark-mode .highlight {
-      background: #023804;
-    }
-    .dark-mode button {
-      background: #333;
-      color: #f1f1f1;
-    }
-    .dark-mode .load-button {
-  background: #f0f0f0 !important; /* hell lassen */
-  color: #000 !important;         /* schwarze Schrift */
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pokemon Search</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background:#666769;
+  color:#f0f0f0;
+  margin:0;
 }
-  </style>
+header {
+  display:flex;
+  justify-content:flex-end;
+  padding:10px;
+}
+button {
+  padding:10px 18px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  margin:5px;
+}
+.section {
+  margin:20px;
+  padding:15px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+.highlight { background:#02491D; }
+table {
+  width:100%;
+  border-collapse:collapse;
+}
+th,td {
+  border:1px solid #999;
+  padding:6px;
+}
+
+/* loading */
+#loading-screen {
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+#app { display:none; }
+
+/* dark mode */
+.dark-mode {
+  background:#1A252C;
+  color:#f1f1f1;
+}
+.dark-mode .section { border-color:#555; }
+.dark-mode table, .dark-mode th, .dark-mode td { border-color:#555; }
+.dark-mode .highlight { background:#023804; }
+.dark-mode button {
+  background:#333;
+  color:#f1f1f1;
+}
+</style>
 </head>
+
 <body>
-  <header>
-    <button id="darkModeToggle">🌙 Dark Mode</button>
-  </header>
 
-  <div id="loading-screen">
-    <img src="https://i.imgur.com/XZcfQzw.png" alt="Loading Logo" style="max-width:200px; margin-bottom:20px;">
-    <button id="loadDataBtn" class="load-button">Load Data</button>
-    <p id="loadingText"></p>
-  </div>
+<header id="mainHeader" style="display:none">
+  <button id="darkToggle">🌙 Dark Mode</button>
+</header>
 
-  <div id="app">
-    <div class="section highlight">
-      <h2>Pokemon Finder</h2>
-      <input type="text" id="pokemonInput" placeholder="Enter Pokémon name" />
-      <label><input type="checkbox" id="optimizedHunt" /> Optimized Hunt</label>
-      <button id="pokemonSearchBtn">Search</button>
-      <button id="pokemonResetBtn">Reset</button>
-      <div id="pokemonResults"></div>
-    </div>
-    <script>
-    document.getElementById("pokemonInput").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault(); // verhindert zufälliges Neuladen der Seite
-        document.getElementById("pokemonSearchBtn").click(); // löst Button-Klick aus
-      }
-    });
-    </script>
+<div id="loading-screen">
+  <img src="https://i.imgur.com/XZcfQzw.png" style="max-width:200px">
+  <p id="loadingText">Loading...</p>
+</div>
 
-    <div class="section">
-      <h2>Spawn Check</h2>
-      <select id="regionSelect"><option value="">Select Region</option></select>
-      <select id="locationSelect" disabled><option value="">Select Location</option></select>
-      <button id="spawnSearchBtn">Search</button>
-      <button id="spawnResetBtn">Reset</button>
-      <div id="spawnResults"></div>
-    </div>
+<div id="app">
 
-    <div class="section highlight">
-      <h2>Chest Finder</h2>
-      <select id="chestSelect"><option value="">Select Type</option></select>
-      <button id="chestSearchBtn">Search</button>
-      <button id="chestResetBtn">Reset</button>
-      <div id="chestResults"></div>
-    </div>
+<!-- Pokemon Search -->
+<div class="section highlight">
+  <h2>Pokemon Search</h2>
+  <input id="pokemonInput" placeholder="Enter Pokémon name">
+  <label>
+    <input type="checkbox" id="optimizedHunt"> Optimized Hunt
+  </label><br><br>
+  <button id="pokemonSearch">Search</button>
+  <button id="pokemonReset">Reset</button>
+  <div id="pokemonResults"></div>
+</div>
 
-    <div class="section">
-      <h2>Mega Stone Check</h2>
-      <select id="megaSelect"><option value="">Select Mega Stone</option></select>
-      <button id="megaSearchBtn">Search</button>
-      <button id="megaResetBtn">Reset</button>
-      <div id="megaResults"></div>
-    </div>
+<!-- Spawn Check -->
+<div class="section">
+  <h2>Spawn Check</h2>
+  <select id="regionSelect">
+    <option value="">Select Region</option>
+  </select>
+  <select id="locationSelect" disabled>
+    <option value="">Select Location</option>
+  </select><br><br>
+  <button id="spawnSearch">Search</button>
+  <button id="spawnReset">Reset</button>
+  <div id="spawnResults"></div>
+</div>
 
-    <div class="section highlight">
-      <h2>PVP Check</h2>
-      <input type="text" id="pvpInput" placeholder="Enter Pokémon name" />
-      <button id="pvpSearchBtn">Search</button>
-      <button id="pvpResetBtn">Reset</button>
-      <div id="pvpResults"></div>
-    </div>
-  </div>
+<!-- Pokemon Chest Finder -->
+<div class="section highlight">
+  <h2>Pokemon Chest Finder</h2>
+  <select id="chestSelect">
+    <option value="">Select Chest Type</option>
+  </select><br><br>
+  <button id="chestSearch">Search</button>
+  <button id="chestReset">Reset</button>
+  <div id="chestResults"></div>
+</div>
 
-  <script>
-    // Dark Mode
-    const darkToggle = document.getElementById("darkModeToggle");
-    darkToggle.addEventListener("click", () => {
-      document.body.classList.toggle("dark-mode");
-      darkToggle.textContent = document.body.classList.contains("dark-mode") 
-        ? "☀️ Light Mode" : "🌙 Dark Mode";
-    });
+</div>
 
-    // Loading
-    const loadBtn = document.getElementById("loadDataBtn");
-    const loadText = document.getElementById("loadingText");
-    const loadingScreen = document.getElementById("loading-screen");
-    const app = document.getElementById("app");
+<script>
+document.addEventListener("DOMContentLoaded", () => {
 
-    loadBtn.addEventListener("click", async () => {
-      loadBtn.disabled = true;
-      loadText.textContent = "Loading...";
-      await loadData();
-      loadingScreen.style.display = "none";
-      app.style.display = "block";
-    });
+const darkToggle = document.getElementById("darkToggle");
+const loadingScreen = document.getElementById("loading-screen");
+const app = document.getElementById("app");
 
-    // Sheets
-    const spawnSheets = {
-      "Sinnoh": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3eHdgBkA2DHukT5irO5O38RuYUZ3BDYfM0TCz9LATz0URiiKCSkyKtNFbfQkKR2pEzLbCeMh7saZe/pub?gid=0&single=true&output=csv",
-      "Jvaloh": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3eHdgBkA2DHukT5irO5O38RuYUZ3BDYfM0TCz9LATz0URiiKCSkyKtNFbfQkKR2pEzLbCeMh7saZe/pub?gid=1888700837&single=true&output=csv",
-      "Hoenn": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3eHdgBkA2DHukT5irO5O38RuYUZ3BDYfM0TCz9LATz0URiiKCSkyKtNFbfQkKR2pEzLbCeMh7saZe/pub?gid=1008140095&single=true&output=csv",
-      "Kanto": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3eHdgBkA2DHukT5irO5O38RuYUZ3BDYfM0TCz9LATz0URiiKCSkyKtNFbfQkKR2pEzLbCeMh7saZe/pub?gid=963744340&single=true&output=csv",
-      "Event": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3eHdgBkA2DHukT5irO5O38RuYUZ3BDYfM0TCz9LATz0URiiKCSkyKtNFbfQkKR2pEzLbCeMh7saZe/pub?gid=867555265&single=true&output=csv",
-      "Crew Wars Island": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3eHdgBkA2DHukT5irO5O38RuYUZ3BDYfM0TCz9LATz0URiiKCSkyKtNFbfQkKR2pEzLbCeMh7saZe/pub?gid=277236296&single=true&output=csv"
-    };
+const pokemonInput = document.getElementById("pokemonInput");
+const optimizedHunt = document.getElementById("optimizedHunt");
+const pokemonResults = document.getElementById("pokemonResults");
 
-    const chestSheet = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9NXQeF7_DUFs-GSpxYU5QsufA6Vtwi_n5O6ytErPYQAssIC4zen99a23uPvYQXzjARPvF0XbXIiOn/pub?output=csv";
-    const megaSheet = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT8oRNGXyajLEDTw_z2AYgO5ls7TD9khstdBS2RL6PD9CwB06GKGM9dl2SerCRtSjSf5Y-8lo4sZ7UP/pub?output=csv";
-    const pvpSheet = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSp2K2rlJkpsFvuUWBjjiO-qpoJnfAx2vXJATqJYpK8fwmxuYBvKPihKvnPKChSt276QRjLkMlUTMgz/pub?output=csv";
+const regionSelect = document.getElementById("regionSelect");
+const locationSelect = document.getElementById("locationSelect");
+const spawnResults = document.getElementById("spawnResults");
 
-    let spawnData = {};
-    let chestData = [];
-    let megaData = [];
-    let pvpData = [];
+const chestSelect = document.getElementById("chestSelect");
+const chestResults = document.getElementById("chestResults");
 
-    async function fetchCSV(url) {
-      const res = await fetch(url);
-      const text = await res.text();
-      return text.split("\n").map(r => r.split(",").map(c => c.trim()));
-    }
+/* ---------- DARK MODE ---------- */
+darkToggle.onclick = () => {
+  document.body.classList.toggle("dark-mode");
+  darkToggle.textContent =
+    document.body.classList.contains("dark-mode")
+    ? "☀️ Light Mode"
+    : "🌙 Dark Mode";
+};
 
-    // ---------- OPTIMIZED: parallel loading instead of sequential ----------
-    async function loadData() {
-      // create promises for all spawn sheets
-      const spawnPromises = Object.entries(spawnSheets).map(([region, url]) =>
-        fetchCSV(url).then(data => [region, data])
+/* ---------- DATA ---------- */
+const spawnSheets = {
+  "Sinnoh": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3eHdgBkA2DHukT5irO5O38RuYUZ3BDYfM0TCz9LATz0URiiKCSkyKtNFbfQkKR2pEzLbCeMh7saZe/pub?gid=0&single=true&output=csv",
+  "Jvaloh": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3eHdgBkA2DHukT5irO5O38RuYUZ3BDYfM0TCz9LATz0URiiKCSkyKtNFbfQkKR2pEzLbCeMh7saZe/pub?gid=1888700837&single=true&output=csv",
+  "Hoenn": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3eHdgBkA2DHukT5irO5O38RuYUZ3BDYfM0TCz9LATz0URiiKCSkyKtNFbfQkKR2pEzLbCeMh7saZe/pub?gid=1008140095&single=true&output=csv",
+  "Kanto": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3eHdgBkA2DHukT5irO5O38RuYUZ3BDYfM0TCz9LATz0URiiKCSkyKtNFbfQkKR2pEzLbCeMh7saZe/pub?gid=963744340&single=true&output=csv",
+  "Event": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3eHdgBkA2DHukT5irO5O38RuYUZ3BDYfM0TCz9LATz0URiiKCSkyKtNFbfQkKR2pEzLbCeMh7saZe/pub?gid=867555265&single=true&output=csv",
+  "Crew Wars Island": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3eHdgBkA2DHukT5irO5O38RuYUZ3BDYfM0TCz9LATz0URiiKCSkyKtNFbfQkKR2pEzLbCeMh7saZe/pub?gid=277236296&single=true&output=csv"
+};
+
+const chestSheet =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSVyz5OEsZPTtyz8HuFXQ6-a4n1s_ZHAIAsL6u_gUu6z-x-QDbAMaHu6nJTEgSGTncOBaVpibG0XDG8/pub?output=csv";
+
+let spawnData = {};
+let chestData = [];
+
+async function fetchCSV(url) {
+  const res = await fetch(url);
+  return (await res.text())
+    .split("\n")
+    .map(r => r.split(",").map(c => c.trim()));
+}
+
+async function loadData() {
+  const spawnPromises = Object.entries(spawnSheets)
+    .map(([r,u]) => fetchCSV(u).then(d => [r,d]));
+
+  const [spawns, chest] = await Promise.all([
+    Promise.all(spawnPromises),
+    fetchCSV(chestSheet)
+  ]);
+
+  spawns.forEach(([r,d]) => spawnData[r] = d);
+  chestData = chest;
+
+  Object.keys(spawnSheets).forEach(r => {
+    const o = document.createElement("option");
+    o.value = r;
+    o.textContent = r;
+    regionSelect.appendChild(o);
+  });
+
+  [...new Set(chestData.slice(1).map(r => r[1]))].forEach(type => {
+    if (!type) return;
+    const o = document.createElement("option");
+    o.value = type;
+    o.textContent = type;
+    chestSelect.appendChild(o);
+  });
+}
+
+function renderTable(headers, rows) {
+  if (!rows.length) return "<p>No results found.</p>";
+  return `
+    <table>
+      <thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead>
+      <tbody>
+        ${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}
+      </tbody>
+    </table>`;
+}
+
+/* ---------- POKEMON SEARCH ---------- */
+document.getElementById("pokemonSearch").onclick = () => {
+  const q = pokemonInput.value.toLowerCase();
+  let results = [];
+
+  for (const [region,data] of Object.entries(spawnData)) {
+    let rows = data.slice(1).filter(r => r[2]?.toLowerCase().includes(q));
+
+    if (optimizedHunt.checked) {
+      rows = rows.filter(r =>
+        data.slice(1).some(o =>
+          o[1]===r[1] && o[5]===r[5] && o[3]==="Ultra Rare"
+        )
       );
-
-      // load spawns + other sheets in parallel
-      const [spawnResults, chest, mega, pvp] = await Promise.all([
-        Promise.all(spawnPromises),
-        fetchCSV(chestSheet),
-        fetchCSV(megaSheet),
-        fetchCSV(pvpSheet)
-      ]);
-
-      // store results
-      spawnResults.forEach(([region, data]) => spawnData[region] = data);
-      chestData = chest;
-      megaData = mega;
-      pvpData = pvp;
-
-      // populate region select (same order as spawnSheets)
-      const regionSelect = document.getElementById("regionSelect");
-      Object.keys(spawnSheets).forEach(region => {
-        const opt = document.createElement("option");
-        opt.value = region;
-        opt.textContent = region;
-        regionSelect.appendChild(opt);
-      });
-
-      // populate chest select
-      const chestSelect = document.getElementById("chestSelect");
-      [...new Set(chestData.slice(1).map(r => r[0]))].forEach(type => {
-        const opt = document.createElement("option");
-        opt.value = type;
-        opt.textContent = type;
-        chestSelect.appendChild(opt);
-      });
-
-      // populate mega select
-      const megaSelect = document.getElementById("megaSelect");
-      [...new Set(megaData.slice(1).map(r => r[0]))].forEach(stone => {
-        const opt = document.createElement("option");
-        opt.value = stone;
-        opt.textContent = stone;
-        megaSelect.appendChild(opt);
-      });
-    }
-    // ---------------------------------------------------------------------
-
-    function renderTable(headers, rows) {
-      if (!rows.length) return "<p>No results found.</p>";
-      let html = "<table><thead><tr>";
-      headers.forEach(h => html += `<th>${h}</th>`);
-      html += "</tr></thead><tbody>";
-      rows.forEach(r => {
-        html += "<tr>" + r.map(c => `<td>${c}</td>`).join("") + "</tr>";
-      });
-      html += "</tbody></table>";
-      return html;
     }
 
-    // Pokemon Finder
-    document.getElementById("pokemonSearchBtn").addEventListener("click", () => {
-      const query = document.getElementById("pokemonInput").value.trim().toLowerCase();
-      const optimized = document.getElementById("optimizedHunt").checked;
-      let results = [];
+    if (rows.length)
+      results.push({
+        region,
+        headers: data[0].slice(1),
+        rows: rows.map(r => r.slice(1))
+      });
+  }
 
-      for (let [region, data] of Object.entries(spawnData)) {
-        const headers = data[0];
-        const rows = data.slice(1).filter(r => r[2] && r[2].toLowerCase().includes(query));
-        if (rows.length) {
-          if (optimized) {
-            const optimizedRows = rows.filter(row => {
-              const location = row[1];
-              const method = row[5];
-              return data.slice(1).some(other => 
-                other[1] === location &&
-                other[5] === method &&
-                other[3] === "Ultra Rare"
-              );
-            });
-            if (optimizedRows.length) {
-              results.push({ region, headers, rows: optimizedRows });
-            }
-          } else {
-            results.push({ region, headers, rows });
-          }
-        }
-      }
+  const chestRows = chestData
+    .slice(1)
+    .filter(r => r[0]?.toLowerCase().includes(q))
+    .map(r => [r[0], r[1], r[2]]);
 
-      // Chest sheet
-      const chestRows = chestData.slice(1).filter(r => r[2] && r[2].toLowerCase().includes(query));
-      if (chestRows.length) {
-        results.push({ region: "Chests", headers: chestData[0], rows: chestRows });
-      }
-
-      const container = document.getElementById("pokemonResults");
-      container.innerHTML = results.length 
-        ? results.map(r => `<h3>${r.region}</h3>` + renderTable(r.headers, r.rows)).join("")
-        : "<p>Currently not listed...</p>";
+  if (chestRows.length)
+    results.push({
+      region: "Chests",
+      headers: chestData[0].slice(0,3),
+      rows: chestRows
     });
 
-    document.getElementById("pokemonResetBtn").addEventListener("click", () => {
-      document.getElementById("pokemonInput").value = "";
-      document.getElementById("pokemonResults").innerHTML = "";
-    });
+  pokemonResults.innerHTML = results.length
+    ? results.map(r=>`<h3>${r.region}</h3>`+renderTable(r.headers,r.rows)).join("")
+    : "<p>Currently not listed...</p>";
+};
 
-    // Spawn Check
-    document.getElementById("regionSelect").addEventListener("change", e => {
-      const region = e.target.value;
-      const locationSelect = document.getElementById("locationSelect");
-      locationSelect.innerHTML = "<option value=''>Select Location</option>";
-      if (region) {
-        const data = spawnData[region];
-        [...new Set(data.slice(1).map(r => r[1]))].forEach(loc => {
-          const opt = document.createElement("option");
-          opt.value = loc;
-          opt.textContent = loc;
-          locationSelect.appendChild(opt);
-        });
-        locationSelect.disabled = false;
-      } else {
-        locationSelect.disabled = true;
-      }
-    });
+pokemonInput.onkeydown = e => {
+  if (e.key === "Enter")
+    document.getElementById("pokemonSearch").click();
+};
 
-    document.getElementById("spawnSearchBtn").addEventListener("click", () => {
-      const region = document.getElementById("regionSelect").value;
-      const location = document.getElementById("locationSelect").value;
-      const container = document.getElementById("spawnResults");
-      if (region && location) {
-        const data = spawnData[region];
-        const headers = data[0];
-        const rows = data.slice(1).filter(r => r[1] === location);
-        container.innerHTML = renderTable(headers, rows);
-      } else {
-        container.innerHTML = "<p>Please select both region and location.</p>";
-      }
-    });
+document.getElementById("pokemonReset").onclick = () => {
+  pokemonInput.value = "";
+  pokemonResults.innerHTML = "";
+};
 
-    document.getElementById("spawnResetBtn").addEventListener("click", () => {
-      document.getElementById("regionSelect").value = "";
-      document.getElementById("locationSelect").innerHTML = "<option value=''>Select Location</option>";
-      document.getElementById("locationSelect").disabled = true;
-      document.getElementById("spawnResults").innerHTML = "";
-    });
+/* ---------- SPAWN CHECK ---------- */
+regionSelect.onchange = () => {
+  locationSelect.innerHTML = "<option value=''>Select Location</option>";
+  const r = regionSelect.value;
+  if (!r) return locationSelect.disabled = true;
 
-    // Chest Finder
-    document.getElementById("chestSearchBtn").addEventListener("click", () => {
-      const type = document.getElementById("chestSelect").value;
-      const container = document.getElementById("chestResults");
-      if (type) {
-        const headers = chestData[0];
-        const rows = chestData.slice(1).filter(r => r[0] === type);
-        container.innerHTML = renderTable(headers, rows);
-      } else {
-        container.innerHTML = "<p>Please select a type.</p>";
-      }
+  [...new Set(spawnData[r].slice(1).map(x=>x[1]))]
+    .forEach(l => {
+      const o = document.createElement("option");
+      o.value = l;
+      o.textContent = l;
+      locationSelect.appendChild(o);
     });
+  locationSelect.disabled = false;
+};
 
-    document.getElementById("chestResetBtn").addEventListener("click", () => {
-      document.getElementById("chestSelect").value = "";
-      document.getElementById("chestResults").innerHTML = "";
-    });
+document.getElementById("spawnSearch").onclick = () => {
+  const r = regionSelect.value;
+  const l = locationSelect.value;
+  if (!r || !l)
+    return spawnResults.innerHTML = "<p>Select region and location.</p>";
 
-    // Mega Stone
-    document.getElementById("megaSearchBtn").addEventListener("click", () => {
-      const stone = document.getElementById("megaSelect").value;
-      const container = document.getElementById("megaResults");
-      if (stone) {
-        const headers = megaData[0];
-        const rows = megaData.slice(1).filter(r => r[0] === stone);
-        container.innerHTML = renderTable(headers, rows);
-      } else {
-        container.innerHTML = "<p>Please select a mega stone.</p>";
-      }
-    });
+  const d = spawnData[r];
+  spawnResults.innerHTML = renderTable(
+    d[0].slice(2),
+    d.slice(1).filter(x => x[1] === l).map(x => x.slice(2))
+  );
+};
 
-    document.getElementById("megaResetBtn").addEventListener("click", () => {
-      document.getElementById("megaSelect").value = "";
-      document.getElementById("megaResults").innerHTML = "";
-    });
+document.getElementById("spawnReset").onclick = () => {
+  regionSelect.value = "";
+  locationSelect.innerHTML = "<option value=''>Select Location</option>";
+  locationSelect.disabled = true;
+  spawnResults.innerHTML = "";
+};
 
-    // PvP Check
-    document.getElementById("pvpSearchBtn").addEventListener("click", () => {
-      const query = document.getElementById("pvpInput").value.trim().toLowerCase();
-      const headers = pvpData[0];
-      const rows = pvpData.slice(1).filter(r => r[0] && r[0].toLowerCase().includes(query));
-      const container = document.getElementById("pvpResults");
-      container.innerHTML = rows.length ? renderTable(headers, rows) : "<p>Currently not listed...</p>";
-    });
-    // PvP Check per Enter
-    document.getElementById("pvpInput").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-      e.preventDefault(); 
-      document.getElementById("pvpSearchBtn").click();
-      }
-    });
+/* ---------- CHEST FINDER ---------- */
+document.getElementById("chestSearch").onclick = () => {
+  const type = chestSelect.value;
+  if (!type)
+    return chestResults.innerHTML = "<p>Please select a chest type.</p>";
 
-    document.getElementById("pvpResetBtn").addEventListener("click", () => {
-      document.getElementById("pvpInput").value = "";
-      document.getElementById("pvpResults").innerHTML = "";
-    });
-  </script>
+  const headers = [chestData[0][0], chestData[0][2]];
+  const rows = chestData
+    .slice(1)
+    .filter(r => r[1] === type)
+    .map(r => [r[0], r[2]]);
+
+  chestResults.innerHTML = renderTable(headers, rows);
+};
+
+document.getElementById("chestReset").onclick = () => {
+  chestSelect.value = "";
+  chestResults.innerHTML = "";
+};
+
+/* ---------- START ---------- */
+(async () => {
+  await loadData();
+  loadingScreen.style.display = "none";
+  app.style.display = "block";
+  document.getElementById("mainHeader").style.display = "flex";
+})();
+});
+</script>
+
 </body>
 </html>
