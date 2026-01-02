@@ -155,11 +155,29 @@ img.map:hover {
 </head>
 <body>
 
-<div class="toggle-container">
+<!-- Loading Screen -->
+<div id="loadingScreen" style="
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:20px;
+  text-align:center;
+">
+  <img src="https://i.imgur.com/XZcfQzw.png"
+       alt="Loading Logo"
+       style="width:200px;height:200px;border-radius:50%;">
+  <div id="loadingText" style="color:white;font-size:16px;">
+    Loading...
+  </div>
+</div>
+
+<div class="toggle-container" id="toggleContainer" style="display:none;">
   <button id="toggleMode" class="toggle-btn">🌙 Dark Mode</button>
 </div>
 
-<div class="container">
+<div class="container" id="app" style="display:none;">
   <h1>❄️PBO Winter Event 2025 Map & Spawns❄️</h1>
 
   <div class="card">
@@ -204,15 +222,35 @@ toggleBtn.addEventListener("click", () => {
   toggleBtn.textContent = document.body.classList.contains("dark-mode") ? "☀️ Light Mode" : "🌙 Dark Mode";
 });
 
+function updateToggleText() {
+  toggleBtn.textContent =
+    document.body.classList.contains("dark-mode")
+      ? "☀️ Light Mode"
+      : "🌙 Dark Mode";
+}
+updateToggleText();
+
 // Load CSV
-fetch(sheetUrl)
-  .then(res => res.text())
-  .then(txt => {
-    const rows = txt.split("\n").map(r => r.split(","));
-    rows.shift();
-    data = rows.map(r => ({ A: r[0]?.trim(), B: r[1]?.trim() }));
-    populateSelectors();
-  });
+function loadData() {
+  fetch(sheetUrl)
+    .then(res => res.text())
+    .then(txt => {
+      const rows = txt.split("\n").map(r => r.split(","));
+      rows.shift();
+      data = rows.map(r => ({ A: r[0]?.trim(), B: r[1]?.trim() }));
+
+      populateSelectors();
+
+      // Ladebildschirm ausblenden
+      document.getElementById("loadingScreen").style.display = "none";
+      document.getElementById("app").style.display = "block";
+      document.getElementById("toggleContainer").style.display = "block";
+    })
+    .catch(err => {
+      document.getElementById("loadingText").textContent = "Error loading data";
+      console.error(err);
+    });
+}
 
 function populateSelectors() {
   const locSet = [...new Set(data.map(r => r.A))];
@@ -306,6 +344,8 @@ overlayImg.addEventListener("touchmove", e => {
   overlayImg.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
 }, { passive: true });
 overlayImg.addEventListener("touchend", endDrag);
+
+window.addEventListener("DOMContentLoaded", loadData);
 </script>
 </body>
 </html>
