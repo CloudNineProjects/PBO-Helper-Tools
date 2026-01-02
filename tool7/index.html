@@ -34,9 +34,9 @@ button {
   height:100vh; 
 }
 .loader img { 
-  width:220px; 
-  max-width:80%;     /* passt sich kleineren Screens an */
-  height:auto;       /* keine Verzerrung */
+  width:200px; 
+  max-width:80%;
+  height:auto;
   object-fit:cover; 
   border-radius:50%; 
 }
@@ -44,61 +44,65 @@ button {
 @media (max-width:600px) { 
   .loader img { 
     width:160px; 
-    height:160px;   /* quadratisch, rund bleibt rund */
+    height:160px;
   }
   body { font-size:16px; }
 }
-    /* Toggle top right */
-    #toggleMode {
-      position: fixed;
-      top: 15px;
-      right: 15px;
-      padding: 6px 10px;
-      border-radius: 6px;
-      background: #f0f0f0;
-      color: #000;
-      z-index: 1001;
-    }
-    .dark-mode #toggleMode {
-      background: #444;
-      color: #fff;
-    }
 
-    /* Cards pushed down so toggle looks independent */
-    #content {
-      display:none;
-      position:relative;
-      padding-top: 70px;
-    }
+/* Toggle top right – only visible in content */
+#toggleMode {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #f0f0f0;
+  color: #000;
+  z-index: 1001;
+  display:none;
+}
+.dark-mode #toggleMode {
+  background: #444;
+  color: #fff;
+}
+
+#content {
+  display:none;
+  position:relative;
+  padding-top:70px;
+}
   </style>
 </head>
 <body>
-  <!-- Dark/Light toggle -->
+
+  <!-- Dark/Light toggle (hidden until tool is shown) -->
   <button id="toggleMode">🌙 Dark Mode</button>
 
+  <!-- Loader -->
   <div id="loader" class="loader">
     <img src="https://i.imgur.com/XZcfQzw.png" alt="logo">
-    <button id="loadBtn">Load Data</button>
-    <p id="loadingText" style="display:none;">Loading...</p>
+    <p id="loadingText">Loading...</p>
   </div>
 
+  <!-- Main content -->
   <div id="content">
-     <div id="daily" class="card">
+    <div id="daily" class="card">
       <h2>Daily</h2>
       <div id="dailyList"></div>
       <button class="reset-btn" onclick="resetChecks('Daily')">Reset Dailies</button>
     </div>
-    <div id="weekly" class="card alt">
+
+    <div id="weekly" class="card">
       <h2>Weekly</h2>
       <div id="weeklyList"></div>
       <button class="reset-btn" onclick="resetChecks('Weekly')">Reset Weeklies</button>
     </div>
+
     <div id="others" class="card">
       <h2>Others</h2>
       <div id="othersList"></div>
     </div>
 
-    <!-- Settings -->
     <div class="card">
       <h2>Settings</h2>
       <button class="reset-btn" onclick="resetAllData()">Reset All Data</button>
@@ -119,45 +123,43 @@ button {
     }
     document.getElementById("toggleMode").onclick=toggleMode;
 
-    // Load on button click
-    document.getElementById("loadBtn").onclick=()=>{
-      const loadBtn=document.getElementById("loadBtn");
-      const loadingText=document.getElementById("loadingText");
-      loadBtn.disabled=true;
-      loadingText.style.display="block";
-      loadingText.textContent="Loading...";
+    // AUTO LOAD DATA ON PAGE LOAD
+    window.addEventListener("DOMContentLoaded", () => {
+      Papa.parse(
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vSnQAomUZRPHbub-G3CwuUY9iByOE8Q1KHhat_xUIx3bUSo2TfG3DEkET3dumTbSKUMzDlCr3qo0BeN/pub?output=csv",
+        {
+          download:true,
+          header:true,
+          skipEmptyLines:true,
+          complete: function(results) {
+            const data = results.data;
+            let daily="", weekly="", others="";
+            data.forEach((r,i)=>{
+              if(!r.Activity) return;
+              const id="chk"+i;
+              const group=(r.Time||"").trim();
+              const item=`<label><input type="checkbox" id="${id}" onchange="markCheck('${id}')">
+                ${r.Activity} - ${r.Location||""} - ${r.Content||""} (${r.Time||""})
+                <span id="${id}ts"></span></label><br>`;
+              if(group==="Daily") daily+=item;
+              else if(group==="Weekly") weekly+=item;
+              else others+=item+`<button class="reset-btn" onclick="resetSingle('${id}')">Reset</button><br>`;
+            });
 
-      Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vSnQAomUZRPHbub-G3CwuUY9iByOE8Q1KHhat_xUIx3bUSo2TfG3DEkET3dumTbSKUMzDlCr3qo0BeN/pub?output=csv", {
-        download:true,
-        header:true,
-        skipEmptyLines:true,
-        complete: function(results) {
-          const data = results.data;
-          let daily="", weekly="", others="";
-          data.forEach((r,i)=>{
-            if(!r.Activity) return;
-            const id="chk"+i;
-            const group=(r.Time||"").trim();
-            const item=`<label><input type="checkbox" id="${id}" onchange="markCheck('${id}')">
-              ${r.Activity} - ${r.Location||""} - ${r.Content||""} (${r.Time||""})
-              <span id="${id}ts"></span></label><br>`;
-            if(group==="Daily") daily+=item;
-            else if(group==="Weekly") weekly+=item;
-            else others+=item+`<button class="reset-btn" onclick="resetSingle('${id}')">Reset</button><br>`;
-          });
+            document.getElementById("dailyList").innerHTML=daily;
+            document.getElementById("weeklyList").innerHTML=weekly;
+            document.getElementById("othersList").innerHTML=others;
 
-          document.getElementById("dailyList").innerHTML=daily;
-          document.getElementById("weeklyList").innerHTML=weekly;
-          document.getElementById("othersList").innerHTML=others;
-          document.getElementById("loader").style.display="none";
-          document.getElementById("content").style.display="block";
+            document.getElementById("loader").style.display="none";
+            document.getElementById("content").style.display="block";
+            document.getElementById("toggleMode").style.display="block";
 
-          restoreChecks();
+            restoreChecks();
+          }
         }
-      });
-    };
+      );
+    });
 
-    // Save & restore checks
     function markCheck(id){
       const cb=document.getElementById(id);
       const ts=document.getElementById(id+"ts");
@@ -178,7 +180,8 @@ button {
 
     function resetChecks(type){
       document.querySelectorAll("#"+type.toLowerCase()+"List input[type=checkbox]").forEach(cb=>{
-        cb.checked=false; cb.parentNode.classList.remove("strike");
+        cb.checked=false;
+        cb.parentNode.classList.remove("strike");
         const ts=document.getElementById(cb.id+"ts");
         if(ts) ts.textContent="";
         markCheck(cb.id);
@@ -188,7 +191,8 @@ button {
     function resetSingle(id){
       const cb=document.getElementById(id);
       if(cb){ 
-        cb.checked=false; cb.parentNode.classList.remove("strike");
+        cb.checked=false;
+        cb.parentNode.classList.remove("strike");
         const ts=document.getElementById(id+"ts");
         if(ts) ts.textContent="";
         markCheck(id);
